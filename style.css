@@ -19,11 +19,32 @@ body {
     width: 100%;
 }
 
+.icon-container {
+    position: absolute; /* Position the container relative to the window */
+    top: 20px;          /* Adjust the distance from the top */
+    right: 20px;        /* Adjust the distance from the right */
+    display: flex;      /* Align icons horizontally */
+    gap: 15px;          /* Space between icons */
+}
+
+.icon-container i {
+    color: white;       /* Icon color */
+    font-size: 24px;    /* Icon size */
+    cursor: pointer;    /* Change cursor to pointer when hovering over icons */
+    transition: color 0.3s ease; /* Smooth transition when hovering */
+}
+
+.icon-container i:hover {
+    color: #6F251B;     /* Change icon color on hover */
+}
+
+
 .sidebar {
     width: 250px;
     background-color: #293040;
     color: white;
     padding: 20px;
+    border-radius: 15px 15px 0 0;
 }
 
 .sidebar h2 {
@@ -38,7 +59,6 @@ body {
 
 .sidebar ul li {
     margin: 20px 0;
-    font-size: 15px;
     display: flex;
     align-items: center; /* Align icon and text on the same line */
 }
@@ -49,13 +69,14 @@ body {
 }
 
 .sidebar ul li a {
+    flex-grow: 1;
     color: white;
     text-decoration: none;
     font-size: 18px;
-    display: block;
     padding: 10px 0;
     transition: background 0.3s ease;
     flex-grow: 1; /* Allows the link to take up the remaining space */
+    padding-left: 8px;
 }
 
 .sidebar ul li a:hover {
