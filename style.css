@@ -44,7 +44,9 @@ body {
     background-color: #293040;
     color: white;
     padding: 20px;
-    border-radius: 15px 15px 0 0;
+    border-radius: 15px; /* Adjust as needed for rounded corners */
+    overflow: hidden; /* Ensures content doesn't overflow outside the border-radius */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Optional: Adds shadow for better visibility */
 }
 
 .sidebar h2 {
@@ -64,8 +66,10 @@ body {
 }
 
 .sidebar ul li i {
-    margin-right: 8px; /* Space between the icon and the text */
+    margin-right: 10px; /* Space between the icon and the text */
     color: #6F251B; /* Icon color */
+    min-width: 20px; /* Ensures the icon area has a fixed width */
+    text-align: center; /* Centers the icon */
 }
 
 .sidebar ul li a {
