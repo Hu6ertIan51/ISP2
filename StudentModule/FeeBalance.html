@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSense Student Dashboard</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://kit.fontawesome.com/aa11ee7bbf.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="icon-container">
+        <i class="fa-solid fa-bell"></i>
+        <i class="fa-solid fa-user"></i>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <h2>EduSense</h2>
+            <p>Student Navigation Panel</p>
+            <ul>
+                <li><i class="fa-solid fa-house" style="color: #6F251B;" class = "active"></i><a href="/StudentModule/StudentDashboard.html">Dashboard</a></li>
+                <li><i class="fa-solid fa-clipboard" style="color:#6F251B;"></i><a href="/StudentModule/AttendanceRecords.html">Attendance Records</a></li>
+                <li><i class="fa-solid fa-book" style="color:#6F251B;"></i><a href="/StudentModule/Grades.html">Grades</a></li>
+                <li><i class="fa-solid fa-money-bill" style="color:#6F251B;"></i><a href="/StudentModule/FeeBalance.html">Fee Balance</a></li>
+                <li><i class="fa-solid fa-person" style="color:#6F251B;"></i><a href="/StudentModule/MentorInformation.html">Mentor Information</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <section>
+                <div class="attendance-section">
+                    <h2>Student Attendance Information</h2>
+                </div>
+                <div class="academic-info">
+                    <h2>Academic Information</h2>
+                    <table>
+                        <tr>
+                            <td><strong>Intake:</strong></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Academic Status:</strong></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Course:</strong></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fee Balance:</strong></td>
+                            <td></td>
+                        </tr>
+                        
+                    </table>
+                </div>
+                <div class="attendance-info">
+                    <h2>Fee Balance</h2>
+                    <form method="GET" action="/handle_academic_year_selection">
+                        <select name="academic_year" id="academic-year" onchange="this.form.submit()">
+                            <option value="year1">Year 1</option>
+                            <option value="year2">Year 2</option>
+                            <option value="year3">Year 3</option>
+                            <option value="year3">Year 4</option>
+                            <!-- Add more options based on available years -->
+                        </select>
+                    </form>
+                    <table>
+                        <tr>
+                            <td><strong>Payment Date</strong></td>
+                            <td><strong>Amount Paid</strong></td>
+                        </tr>
+
+                    </table>
+                </div>
+            </section>
+            <footer>
+                <p>&copy; 2024</p>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>

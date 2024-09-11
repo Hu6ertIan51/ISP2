@@ -200,3 +200,35 @@ footer {
     color: #555;
 }
 
+.attendance-section h2 {
+    width: 1100px;
+    font-size: 20px;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    background-color: #3E4961;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.attendance-info h2 {
+    width: 1100px;
+    font-size: 20px;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    background-color: #3E4961;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.attendance-details h2 {
+    width: 1100px;
+    font-size: 20px;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    background-color: #3E4961;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+}
