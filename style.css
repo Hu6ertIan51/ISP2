@@ -25,17 +25,18 @@ body {
     right: 20px;        /* Adjust the distance from the right */
     display: flex;      /* Align icons horizontally */
     gap: 15px;          /* Space between icons */
+    transition: none;
+    visibility: visible;
+    padding-right: 50px;
 }
 
 .icon-container i {
-    color: white;       /* Icon color */
-    font-size: 24px;    /* Icon size */
-    cursor: pointer;    /* Change cursor to pointer when hovering over icons */
-    transition: color 0.3s ease; /* Smooth transition when hovering */
+    color: #6F251B; /* A darker, contrasting color */
+    font-size: 24px; /* Icon size */
 }
 
 .icon-container i:hover {
-    color: #6F251B;     /* Change icon color on hover */
+    color: #1f293e;     /* Change icon color on hover */
 }
 
 
@@ -145,11 +146,12 @@ header h1 {
 
 .personal-info h2 {
     font-size: 20px; /* Reduce font size */
-    width: 1000px;
+    width: 1100px;
     padding: 6px 10px; /* Adjust padding */
     background-color: #3E4961; /* Keep the same background color */
     color: white;
     border-radius: 5px;
+    margin-top: 20px;
     margin-bottom: 20px;
 }
 
@@ -203,7 +205,7 @@ footer {
 .attendance-section h2 {
     width: 1100px;
     font-size: 20px;
-    margin-top: 30px;
+    margin-top: 55px;
     margin-bottom: 10px;
     background-color: #3E4961;
     color: white;
@@ -231,4 +233,63 @@ footer {
     color: white;
     padding: 10px;
     border-radius: 5px;
+}
+
+/* Style for the icon-container */
+.icon-container {
+    position: fixed;
+    top: 20px; /* Adjust as needed */
+    right: 20px; /* Adjust as needed */
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Space between icons and button */
+    z-index: 1000; /* Ensure it stays on top */
+}
+
+/* Style for the Register Unit Button */
+.register-unit-btn {
+    background-color: #6F251B; /* Match the sidebar icon color */
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.register-unit-btn i {
+    /* Optional: Adjust icon size if needed */
+    font-size: 18px;
+}
+
+.register-unit-btn:hover {
+    background-color: #1f293e; /* Darker shade on hover */
+}
+
+
+.logout-btn {
+    background-color: #6F251B; /* Match the sidebar icon color */
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.logout-btn i {
+    /* Optional: Adjust icon size if needed */
+    font-size: 18px;
+}
+
+.logout-btn:hover {
+    background-color: #1f293e; /* Darker shade on hover */
 }

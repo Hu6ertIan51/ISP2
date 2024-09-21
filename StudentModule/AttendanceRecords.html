@@ -9,8 +9,9 @@
 </head>
 <body>
     <div class="icon-container">
-        <i class="fa-solid fa-bell"></i>
-        <i class="fa-solid fa-user"></i>
+        <button class="logout-btn">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>Log Out
+        </button>
     </div>
     <div class="container">
         <div class="sidebar">
@@ -42,7 +43,7 @@
                         </tr>
                     </table>
                 </div>
-                <div class="attendance-info">
+                <div class="academic-info">
                     <h2>Academic Year</h2>
                     <form method="GET" action="/handle_academic_year_selection">
                         <select name="academic_year" id="academic-year" onchange="this.form.submit()">
