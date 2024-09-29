@@ -293,3 +293,26 @@ footer {
 .logout-btn:hover {
     background-color: #1f293e; /* Darker shade on hover */
 }
+
+.analytics-btn {
+    background-color: #6F251B; /* Match the sidebar icon color */
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.analytics-btn i {
+    /* Optional: Adjust icon size if needed */
+    font-size: 18px;
+}
+
+.analytics-btn:hover {
+    background-color: #1f293e; /* Darker shade on hover */
+}
