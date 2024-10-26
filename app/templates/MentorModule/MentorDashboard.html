@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSense Mentor Dashboard</title>
+    <link rel="stylesheet" href="{{url_for('static', filename = 'style.css')}}">
+    <script src="https://kit.fontawesome.com/aa11ee7bbf.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="icon-container">
+        <form action="{{ url_for('main.logout') }}" method="POST" id="logout-form" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="logout-btn">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+            </button>
+        </form>
+        <script>
+            function confirmLogout() {
+                if (confirm("Are you sure you want to log out?")) {
+                    document.getElementById("logout-form").submit();
+                }
+            }
+        </script>   
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <h2>EduSense</h2>
+            <p>Mentor Navigation Panel</p>
+            <ul>
+                <li><i class="fa-solid fa-house" style="color: #6F251B;" class = "active"></i><a href="{{url_for('main.mentor_dashboard')}}">Dashboard</a></li>
+                <li><i class="fa-solid fa-clipboard" style="color:#6F251B;"></i><a href="">Log Session</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+                <h1>Welcome</h1>
+                <div class="personal-info">
+                    <h2>Mentor Information</h2>
+                <div class="profile-info">
+                    <img src="student.jpg" alt="">
+                    <div class="student-details">
+                        <p><strong>Mentor Name : Tatiana Omolleh</strong></p>
+                        <p><strong>StaffID : 149225</strong></p>
+                        <p><strong>Faculty : 149225</strong></p>
+                    </div>
+                </div>
+            <section>
+                <div class="personal-info">
+                    <h2>Personal Information</h2>
+                    <table>
+                        <tr>
+                            <td><strong>Mobile Number:</strong></td>
+                            <td>07001111099</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email Address (School):</strong></td>
+                            <td>tatiana.omolleh@strathmore.edu</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email Address (Personal):</strong></td>
+                            <td>tatianaomolleh12@gmail.com</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="academic-info">
+                    <h2>Mentee Information</h2>
+                    <table>
+                        <tr>
+                            <td><strong>Student Name</strong></td>
+                            <td><strong>ID Number</strong></td>
+                            <td><strong>Course</strong></td>
+                            <td><strong>DropOut Status</strong></td>
+                        </tr>
+
+                    </table>
+                </div>
+            </section>
+            <footer>
+                <p>&copy; 2024</p>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>
