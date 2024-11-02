@@ -96,12 +96,12 @@
     <div class="container">
         <div class="left-section">
             <h1>Register User</h1>
-            <form method="POST" action="/register">
+            <form method="POST" action="{{ url_for('main.register') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="text" placeholder="Full Name" name="full_name" required>
                 <input type="text" placeholder="Email" name="email" required>
                 <input type="password" placeholder="Password" name="password" required>
-                <input type="date" placeholder="Date of Birth" name="dob" required>
+                <input type="date" name="dob" placeholder="DOB" required>
                 <input type="text" placeholder="Mobile Number" name="mobile_number" required>
                 <select name="gender" required>
                     <option value="">Select Gender</option>
@@ -110,10 +110,10 @@
                     <option value="Other">Other</option>
                 </select>
                 <select name="role" required>
-                    <option value="Admin">Admin</option>
-                    <option value="Student">Student</option>
-                    <option value="Lecturer">Lecturer</option>
-                    <option value="Mentor">Mentor</option>
+                    <option value="0">Admin</option>
+                    <option value="1">Student</option>
+                    <option value="2">Lecturer</option>
+                    <option value="3">Mentor</option>
                 </select>
                 <button type="submit">Register</button> 
             </form>            

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSense Student Registration</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .left-section {
+            flex: 0.7;
+            max-width: 400px; 
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .left-section h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .left-section input[type="text"],
+        .left-section input[type="password"],
+        .left-section input[type="number"],
+        .left-section input[type="date"],
+        .left-section select,
+        .left-section input.username,
+        .left-section input.education-status {
+            width: 100%;
+            padding: 10px 0;
+            margin: 20px 0;
+            border: none;
+            border-bottom: 2px solid #ccc;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .left-section input[type="text"][readonly] {
+            background-color: #f0f0f0; /* Light background for readonly */
+            border-bottom: 2px solid #ccc;
+        }
+
+        .left-section input::placeholder {
+            color: #888;
+        }
+
+        .left-section input:focus,
+        .left-section select:focus {
+            border-bottom: 2px solid #2C2C2C;
+        }
+
+        .left-section button {
+            padding: 15px;
+            background-color: #293040;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .right-section {
+            flex: 1.3; 
+            background-color: #2C344A;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px; 
+            padding: 40px; 
+            box-sizing: border-box; 
+        }
+
+        .right-section h1 {
+            font-size: 48px;
+            margin: 0;
+        }
+
+        .right-section p {
+            font-size: 20px;
+            color: #E64545;
+            margin: 5px 0;
+        }
+
+        #current_year {
+        width: 100%; /* Adjust to match the width of other input fields */
+        padding: 10px 0;
+        margin: 20px 0;
+        border: none;
+        border-bottom: 2px solid #2C344A; /* Specific color for the border */
+        font-size: 16px;
+        outline: none;
+        transition: border-color 0.3s;
+    }
+
+    /* Placeholder color for better visibility */
+    #current_year::placeholder {
+        color: #888;
+    }
+
+    /* Focused state for current_year field */
+    #current_year:focus {
+        border-bottom: 2px solid #E64545; /* Highlight color on focus */
+    }
+
+    /* Label style */
+    label[for="current_year"] {
+        font-size: 14px;
+        color: #2C344A; /* Label color */
+        display: block;
+        margin-bottom: 5px;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <h1>Register Student</h1>
+            <form method="POST" action="/register_student">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text" name="user_id" value="{{ user_id }}">
+                <select name="school" id="school" onchange="updateCourses()" required>
+                    <option value="">Select School</option>
+                    <option value="SOB">School of Business (SOB)</option>
+                    <option value="SCES">School of Computing and Engineering Sciences (SCES)</option>
+                </select>
+                <select name="course" id="course" required disabled>
+                    <option value="">Select Course</option>
+                </select>
+                <input type="text" name="admission_number" id="admission_number" value="{{ admission_number }}" readonly placeholder="Admission Number">
+                
+                <input type="number" id="current_year" name="current_year" default value="1" required placeholder="Current Year">
+                <button type="submit">Register Student</button> 
+            </form>
+        </div>
+        <div class="right-section">
+            <h1>EduSense</h1>
+            <p>Student Registration Page</p>
+        </div>
+    </div>    
+
+    <script>
+        const courses = {
+            SOB: [
+                { value: 'BBA', text: 'Bachelor of Business Administration (BBA)' },
+                { value: 'BCom', text: 'Bachelor of Commerce (BCom)' },
+                { value: 'BIB', text: 'Bachelor of International Business (BIB)' },
+                { value: 'BSCM', text: 'Bachelor of Supply Chain Management' },
+                { value: 'BEnt', text: 'Bachelor of Entrepreneurship' },
+                { value: 'BEco', text: 'Bachelor of Economics' },
+                { value: 'BAS', text: 'Bachelor of Actuarial Science' }
+            ],
+            SCES: [
+                { value: 'BSC', text: 'Bachelor of Science in Computer Science' },
+                { value: 'BBIT', text: 'Bachelor of Business Information Technology (BBIT)' },
+                { value: 'BSE', text: 'Bachelor of Science in Software Engineering' },
+                { value: 'BSEE', text: 'Bachelor of Science in Electrical and Electronics Engineering' },
+                { value: 'BCE', text: 'Bachelor of Science in Civil Engineering' },
+                { value: 'BME', text: 'Bachelor of Science in Mechanical Engineering' },
+                { value: 'BDSAI', text: 'Bachelor of Science in Data Science and Artificial Intelligence' }
+            ]
+        };
+
+        function updateCourses() {
+            const schoolSelect = document.getElementById('school');
+            const courseSelect = document.getElementById('course');
+            const selectedSchool = schoolSelect.value;
+
+            courseSelect.innerHTML = '<option value="">Select Course</option>';
+
+            if (selectedSchool) {
+                courses[selectedSchool].forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.value;
+                    option.textContent = course.text;
+                    courseSelect.appendChild(option);
+                });
+                courseSelect.disabled = false;
+            } else {
+                courseSelect.disabled = true;
+            }
+        }
+    </script>
+</body>
+</html>

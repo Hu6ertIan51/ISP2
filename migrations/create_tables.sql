@@ -9,3 +9,15 @@ CREATE TABLE IF NOT EXISTS Users (
     role VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS student_details (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    school VARCHAR(255) NOT NULL,
+    course VARCHAR(255) NOT NULL,
+    admission_number CHAR(7) UNIQUE NOT NULL,
+    current_year INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+

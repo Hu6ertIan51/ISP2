@@ -54,7 +54,7 @@ def create_app():
     with app.app_context():
         db_connection = get_db_connection()
         if db_connection:
-            run_migration(db_connection, 'migrations/create_users_table.sql')
+            run_migration(db_connection, 'migrations/create_tables.sql')
         else:
             print("Failed to establish a database connection.")
 
