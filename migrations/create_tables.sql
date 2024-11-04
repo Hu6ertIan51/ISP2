@@ -17,6 +17,19 @@ CREATE TABLE IF NOT EXISTS student_details (
     course VARCHAR(255) NOT NULL,
     admission_number CHAR(7) UNIQUE NOT NULL,
     current_year INT NOT NULL,
+    year_intake VARCHAR(20) NOT NULL,
+    academic_status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS lecturer_details (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    school VARCHAR(255) NOT NULL,
+    lecturer_number CHAR(7) UNIQUE NOT NULL,
+    year_intake VARCHAR(20) NOT NULL,
+    lecturer_status VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );

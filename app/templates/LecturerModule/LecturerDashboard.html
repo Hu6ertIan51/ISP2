@@ -49,9 +49,9 @@
                 <div class="profile-info">
                     <img src="student.jpg" alt="">
                     <div class="student-details">
-                        <p><strong>Lecturer Name : Tatiana Omolleh</strong></p>
-                        <p><strong>Staff ID Number : 149225</strong></p>
-                        <p><strong>Faculty : BICS</strong></p>
+                        <p><strong>Lecturer Name : {{lecturer.full_name}}</strong></p>
+                        <p><strong>Staff ID Number : {{lecturer.lecturer_number}}</strong></p>
+                        <p><strong>Faculty : {{lecturer.school}}</strong></p>
                     </div>
                 </div>
             <section>
@@ -60,15 +60,11 @@
                     <table>
                         <tr>
                             <td><strong>Mobile Number:</strong></td>
-                            <td>07001111099</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Email Address (School):</strong></td>
-                            <td>tatiana.omolleh@strathmore.edu</td>
+                            <td>{{lecturer.mobile_number}}</td>
                         </tr>
                         <tr>
                             <td><strong>Email Address (Personal):</strong></td>
-                            <td>tatianaomolleh12@gmail.com</td>
+                            <td>{{lecturer.email}}</td>
                         </tr>
                     </table>
                 </div>

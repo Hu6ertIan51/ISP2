@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduSense Student Registration</title>
+    <title>EduSense Lecturer Registration</title>
     <style>
         body, html {
             margin: 0;
@@ -104,40 +104,34 @@
 <body>
     <div class="container">
         <div class="left-section">
-            <h1>Register Student</h1>
-            <form method="POST" action="/register_student">
+            <h1>Register Lecturer</h1>
+            <form method="POST" action="/register_lecturer">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="text" name="user_id" value="{{ user_id }}" readonly>
                 
-                <select name="school" id="school" onchange="updateCourses()" required>
+                <select name="school" id="school" required>
                     <option value="">Select School</option>
                     <option value="SOB">School of Business (SOB)</option>
                     <option value="SCES">School of Computing and Engineering Sciences (SCES)</option>
                 </select>
                 
-                <select name="course" id="course" required disabled>
-                    <option value="">Select Course</option>
-                </select>
+                <input type="text" name="lecturer_number" id="lecturer_number" value="{{ lecturer_number }}" readonly placeholder="Lecturer Number">
                 
-                <input type="text" name="admission_number" id="admission_number" value="{{ admission_number }}" readonly placeholder="Admission Number">
+                <input type="month" name="year_intake" placeholder="Year Intake" required>
                 
-                <input type="number" id="current_year" name="current_year" value="1" required placeholder="Current Year">
-
-                <input type="month" name="year_intake" placeholder="year_intake" required>
-
-                <select name="academic_status" id="academic" required>
+                <select name="lecturer_status" id="lecturer_status" required>
                     <option value="">Select Status</option>
                     <option value="0">Active</option>
                     <option value="1">Inactive</option>
                 </select>
-
-                <button type="submit">Register Student</button> 
-            </form>
+                
+                <button type="submit">Register Lecturer</button> 
+            </form>            
         </div>
         
         <div class="right-section">
             <h1>EduSense</h1>
-            <p>Student Registration Page</p>
+            <p>Lecturer Registration Page</p>
         </div>
     </div>    
 
