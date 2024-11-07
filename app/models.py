@@ -1,6 +1,6 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash  # Import hash functions for password handling
-from .db import fetch_one, execute_query  # Import the functions from db.py
+from .db import fetch_one, fetch_all, execute_query  # Import the functions from db.py
 import random  # Import the random module
 
 class User(UserMixin):  # Inherit from UserMixin
@@ -159,7 +159,7 @@ class Lecturer:
         query = """
         SELECT u.full_name, ld.user_id, ld.school, ld.lecturer_number, u.mobile_number, u.email, ld.year_intake, ld.lecturer_status
         FROM lecturer_details ld
-        JOIN users u ON ld.user_id = u.id
+        JOIN users u ON ld.user_id = u.id 
         WHERE ld.user_id = %s
         """
         result = fetch_one(db, query, (user_id,))
@@ -175,7 +175,50 @@ class Lecturer:
                 lecturer_status=result['lecturer_status']
             )
         return None
+    
+class Unit:
+    def __init__(self, unit_id, unit_name, unit_code, school, course, year_offered, semester_offered):
+        self.unit_id = unit_id
+        self.unit_name = unit_name
+        self.unit_code = unit_code
+        self.school = school
+        self.course = course
+        self.year_offered = year_offered
+        self.semester_offered = semester_offered
 
+    
+    def generate_unit_code(unit_name, course, year_offered, semester_offered, db):
+        # Generate a base code from the first three letters of the unit name
+        unit_name_code = ''.join(word[0] for word in unit_name.split()[:3]).upper()
+        
+        # Use the first three letters of the course and the last two digits of the year offered
+        course_code = ''.join(word[0] for word in course.split()[:3]).upper()
+        year_code = str(year_offered)[-2:]
+        
+        # Add a semester code (S1 for Semester 1, S2 for Semester 2)
+        semester_code = f"S{semester_offered}"
 
+        # Construct a base code using unit name, course, year offered, and semester (e.g., AI10124S1)
+        base_code = f"{unit_name_code}{course_code}{year_code}{semester_code}"
 
+        # Check the database for existing codes and increment if necessary
+        query = """
+        SELECT COUNT(*) FROM units WHERE unit_code LIKE %s
+        """
+        params = (f"{base_code}%",)
+        result = fetch_all(db, query, params)
+        count = result[0][0] if result else 0
+
+        # Append the count to the base code for uniqueness
+        unique_code = f"{base_code}{count + 1:03d}"  # e.g., AI10124S1001
+        return unique_code
+
+    @staticmethod
+    def create_unit(unit_name, unit_code, school, course, year_offered, semester_offered, db):
+        query = """
+        INSERT INTO units (unit_name, unit_code, school, course, year_offered, semester_offered)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        params = (unit_name, unit_code, school,course, year_offered, semester_offered)
+        execute_query(db, query, params)
 

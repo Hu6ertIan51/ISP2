@@ -8,13 +8,21 @@
     <script src="https://kit.fontawesome.com/aa11ee7bbf.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="icon-container">
-        <button class="analytics-btn" onclick="window.location.href='/AdminModule/AdminDashboard.html'">
-            <i class="fa-solid fa-arrow-left"></i> Go Back 
-        </button>        
-        <button class="logout-btn">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i>Log Out
-        </button>
+    <div class="icon-container">     
+        <form action="{{ url_for('main.logout') }}" method="POST" id="logout-form" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="button" class="logout-btn" onclick="confirmLogout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+            </button>
+        </form>
+        
+        <script>
+            function confirmLogout() {
+                if (confirm("Are you sure you want to log out?")) {
+                    document.getElementById("logout-form").submit();
+                }
+            }
+        </script>        
     </div>
     <div class="container">
         <div class="sidebar">
@@ -22,15 +30,15 @@
             <p>Admin Navigation Panel</p>
             <ul>
                 <li><i class="fa-solid fa-house" style="color: #6F251B;" class = "active"></i>
-                    <a href="{{url_for('admin_dashboard')}}">Admin Dashboard</a></li>
+                    <a href="{{url_for('main.admin_dashboard')}}">Admin Dashboard</a></li>
                 <li><i class="fa-regular fa-user" style="color: #6F251B"></i></i>
-                    <a href="{{url_for('manage_user')}}">Manage User Accounts</a></li>
+                    <a href="{{url_for('main.manageusers')}}">Manage User Accounts</a></li>
                 <li><i class="fa-solid fa-book" style="color:#6F251B;"></i>
-                    <a href="{{url_for('manage_course')}}">Manage Course Information</a></li>
+                    <a href="">Manage Course Information</a></li>
                 <li><i class="fa-regular fa-bell" style="color:#6F251B;"></i></i>
-                    <a href="{{url_for('view_alerts')}}">View Alerts & Predictions</a></li>
+                    <a href="">View Alerts & Predictions</a></li>
                 <li><i class="fa-solid fa-money-bill" style="color:#6F251B;"></i>
-                    <a href="{{url_for('pending_fees')}}">View Pending Fees</a></li>
+                    <a href="">View Pending Fees</a></li>
             </ul>
         </div>
         <div class="main-content">
@@ -38,17 +46,18 @@
                 <h2>Manage User Activities</h2>
             </div>
                 <div class="personal-info">
-                    <h2>Student Accounts</h2>
+                    <h2>Manage User Accounts</h2>
                 <div class="profile-info">
 
-            <div class="manage-students">
-                <button class="analytics-btn">
-                    <i class="fa-solid fa-user-plus"></i>Register Student
-                </button>
-                <button class="analytics-btn">
-                    <i class="fa-solid fa-user-plus"></i>Register Unit
-                </button>
-                
+                    <div class="button-container">
+                        <button class="analytics-btn" onclick="window.location.href='{{ url_for('main.register')}}'">
+                            <i class="fa-solid fa-user-plus"></i> Register Users
+                        </button>
+                        <button class="analytics-btn" onclick="window.location.href=''">
+                            <i class="fa-solid fa-user-plus"></i> View Users
+                        </button>
+                    </div>
+                    
             </div>
             </section>
             <footer>

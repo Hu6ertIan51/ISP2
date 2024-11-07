@@ -34,3 +34,14 @@ CREATE TABLE IF NOT EXISTS lecturer_details (
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS units (
+    id INT AUTO_INCREMENT PRIMARY KEY,  
+    unit_name VARCHAR(255) NOT NULL,
+    unit_code VARCHAR(20) NOT NULL,   
+    school VARCHAR(255) NOT NULL,
+    course VARCHAR(255) NOT NULL,
+    year_offered INT NOT NULL,  
+    semester_offered INT NOT NULL,                       
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

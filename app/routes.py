@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
-from .models import User, Student, Lecturer
+from .models import User, Student, Lecturer, Unit
 from .db import get_db_connection
 from functools import wraps
+from datetime import datetime
 
 main = Blueprint('main', __name__)
 
@@ -132,7 +133,47 @@ def register():
 
     return render_template('AdminModule/RegisterUser.html')
 
-from datetime import datetime
+@main.route('/register_unit', methods=['GET', 'POST'])
+@login_required
+@role_required('0')  # Admin role
+def register_unit():
+    if request.method == 'POST':
+        unit_name = request.form['unit_name']
+        unit_code = request.form['unit_code']
+        school = request.form['school']
+        course = request.form['course']
+        year_offered = request.form['year_offered']
+        semester_offered = request.form['semester_offered']
+        
+        # Get database connection
+        db_connection = get_db_connection()
+        
+        # Generate a unique unit code
+        unit_code = Unit.generate_unit_code(unit_name, course, year_offered, semester_offered, db_connection)
+
+        # Create the unit in the database with the generated unit_code
+        Unit.create_unit(unit_name, unit_code, school, course, year_offered, semester_offered, db_connection)
+        
+        flash('Unit registered successfully!', 'success')
+        return redirect(url_for('main.admin_dashboard')) 
+
+    return render_template('AdminModule/RegisterUnit.html')
+
+@main.route('/generate_unit_code', methods=['POST'])
+def generate_unit_code():
+    data = request.get_json()
+    unit_name = data.get('unit_name')
+    course = data.get('course')
+    year_offered = data.get('year_offered')
+    semester_offered = data.get('semester_offered')
+    
+    # Get database connection
+    db_connection = get_db_connection()
+    
+    # Generate the unit code
+    unit_code = Unit.generate_unit_code(unit_name, course, year_offered, semester_offered, db_connection)
+    
+    return jsonify({"unit_code": unit_code})
 
 @main.route('/register_student', methods=['GET', 'POST'])
 @login_required
@@ -305,6 +346,12 @@ def lecturer_dashboard():
 @role_required('3')  # Mentor role
 def mentor_dashboard():
     return render_template('MentorModule/MentorDashboard.html')
+
+@main.route('/manageusers')
+@login_required
+@role_required('0')
+def manageusers():
+    return render_template('AdminModule/ManageUser.html')
 
 @main.route('/success')
 def success_page():

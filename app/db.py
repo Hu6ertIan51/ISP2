@@ -26,3 +26,11 @@ def fetch_one(connection, query, params=None):
     result = cursor.fetchone()
     cursor.close()
     return result
+
+def fetch_all(connection, query, params=None):
+    """Fetch all records from a SELECT query."""
+    cursor = connection.cursor()
+    cursor.execute(query, params)
+    result = cursor.fetchall()
+    cursor.close()
+    return result

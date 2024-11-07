@@ -324,4 +324,12 @@ footer {
     gap: 10px;
 }
 
+.button-container {
+    display: flex;
+    flex-direction: column; /* Arrange items in a vertical column */
+    gap: 10px; /* Space between the buttons */
+    align-items: flex-start; /* Align buttons to the start of the container */
+}
+
+
 
