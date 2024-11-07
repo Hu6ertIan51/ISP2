@@ -29,7 +29,7 @@ def fetch_one(connection, query, params=None):
 
 def fetch_all(connection, query, params=None):
     """Fetch all records from a SELECT query."""
-    cursor = connection.cursor()
+    cursor = connection.cursor(dictionary=True)  # Use dictionary cursor
     cursor.execute(query, params)
     result = cursor.fetchall()
     cursor.close()

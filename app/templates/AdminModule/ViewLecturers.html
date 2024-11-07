@@ -45,18 +45,38 @@
             <div class="spaceforbanner">
                 <h2>Manage User Activities</h2>
             </div>
-                <div class="personal-info">
-                    <h2>Manage User Accounts</h2>
-                <div class="profile-info">
-
-                    <div class="button-container">
-                        <button class="analytics-btn" onclick="window.location.href='{{ url_for('main.register')}}'">
-                            <i class="fa-solid fa-user-plus"></i> Register Users
-                        </button>
-                        <button class="analytics-btn" onclick="window.location.href='{{url_for('main.viewusers')}}'">
-                            <i class="fa-solid fa-user-plus"></i> View Users
-                        </button>
+                    <div class="personal-user-info">
+                        <h2>View Lecturers</h2>
+                        <div class="user-info">
+                            <table id="studentTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Full name</th>
+                                        <th>Staff Number</th>
+                                        <th>Email</th>
+                                        <th>School</th>
+                                        <th>Year Intake</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for lecturer in lecturers %}
+                                        <tr>
+                                            <td>{{ lecturer.user_id }}</td>
+                                            <td>{{ lecturer.full_name }}</td>
+                                            <td>{{ lecturer.lecturer_number }}</td>
+                                            <td>{{ lecturer.email }}</td>
+                                            <td>{{ lecturer.school }}</td>
+                                            <td>{{ lecturer.year_intake }}</td>
+                                            <td>{{ lecturer.lecturer_status }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+                    
                     
             </div>
             </section>

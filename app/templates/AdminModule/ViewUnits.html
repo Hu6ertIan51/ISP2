@@ -43,20 +43,38 @@
         </div>
         <div class="main-content">
             <div class="spaceforbanner">
-                <h2>Manage User Activities</h2>
+                <h2>Manage Course Information</h2>
             </div>
-                <div class="personal-info">
-                    <h2>Manage User Accounts</h2>
-                <div class="profile-info">
-
-                    <div class="button-container">
-                        <button class="analytics-btn" onclick="window.location.href='{{ url_for('main.register')}}'">
-                            <i class="fa-solid fa-user-plus"></i> Register Users
-                        </button>
-                        <button class="analytics-btn" onclick="window.location.href='{{url_for('main.viewusers')}}'">
-                            <i class="fa-solid fa-user-plus"></i> View Users
-                        </button>
+                    <div class="personal-user-info">
+                        <h2>View Units</h2>
+                        <div class="user-info">
+                            <table id="studentTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">Unit Name</th>
+                                        <th>Unit Code</th>
+                                        <th>School</th>
+                                        <th>Course</th>
+                                        <th>Year Offered</th>
+                                        <th>Semester offered</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for unit in units %}
+                                        <tr>
+                                            <td>{{ unit.unit_name }}</td>
+                                            <td>{{ unit.unit_code }}</td>
+                                            <td>{{ unit.school }}</td>
+                                            <td>{{ unit.course }}</td>
+                                            <td>{{ unit.year_offered }}</td>
+                                            <td>{{ unit.semester_offered }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+                    
                     
             </div>
             </section>

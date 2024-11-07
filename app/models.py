@@ -116,7 +116,35 @@ class Student:
                 academic_status=result['academic_status']
             )
         return None
-
+    
+    @staticmethod
+    def get_all_students(db):
+        """Fetch all student details along with user info."""
+        query = """
+        SELECT u.full_name, sd.user_id, sd.school, sd.course, sd.admission_number, sd.current_year, 
+            u.mobile_number, u.email, sd.year_intake, sd.academic_status
+        FROM student_details sd
+        JOIN users u ON sd.user_id = u.id
+        """
+        results = fetch_all(db, query)
+        students = []
+        for result in results:
+            # Convert the academic_status from 0/1 to 'active'/'inactive'
+            academic_status = 'Inactive' if result['academic_status'] == 1 else 'Active'
+            
+            student = Student(
+                user_id=result['user_id'],
+                school=result['school'],
+                course=result['course'],
+                admission_number=result['admission_number'],
+                full_name=result['full_name'],
+                current_year=result['current_year'],
+                year_intake=result['year_intake'],
+                academic_status=academic_status  # Store 'active' or 'inactive'
+            )
+            students.append(student)
+        
+        return students
 
 class Lecturer:
     def __init__(self, user_id, school, lecturer_number, year_intake, lecturer_status, full_name=None, mobile_number=None, email=None):
@@ -176,9 +204,39 @@ class Lecturer:
             )
         return None
     
+    @staticmethod
+    def convert_lecturer_status(status):
+        """Convert lecturer status from 0/1 to 'active'/'inactive'."""
+        return 'Inactive' if status == 1 else 'Active'
+
+    @staticmethod
+    def get_all_lecturers(db):
+        """Fetch all lecturers and their details along with user info."""
+        query = """
+        SELECT u.full_name, ld.user_id, ld.school, ld.lecturer_number, u.mobile_number, u.email, ld.year_intake, ld.lecturer_status
+        FROM lecturer_details ld
+        JOIN users u ON ld.user_id = u.id
+        """
+        results = fetch_all(db, query)
+        lecturers = []
+        for result in results:
+            # Convert lecturer_status to meaningful 'active'/'inactive'
+            lecturer_status = Lecturer.convert_lecturer_status(result['lecturer_status'])
+            
+            lecturer = Lecturer(
+                user_id=result['user_id'],
+                school=result['school'],
+                lecturer_number=result['lecturer_number'],
+                full_name=result['full_name'],
+                email=result['email'],
+                year_intake=result['year_intake'],
+                lecturer_status=lecturer_status
+            )
+            lecturers.append(lecturer)
+        return lecturers
+    
 class Unit:
-    def __init__(self, unit_id, unit_name, unit_code, school, course, year_offered, semester_offered):
-        self.unit_id = unit_id
+    def __init__(self, unit_name, unit_code, school, course, year_offered, semester_offered):
         self.unit_name = unit_name
         self.unit_code = unit_code
         self.school = school
@@ -207,8 +265,14 @@ class Unit:
         """
         params = (f"{base_code}%",)
         result = fetch_all(db, query, params)
-        count = result[0][0] if result else 0
 
+        # Check if result is valid and has expected data
+        if result and isinstance(result, list) and len(result) > 0:
+            # Access the count from the first tuple in the result
+            count = result[0][0] if result[0] and isinstance(result[0], tuple) else 0
+        else:
+            count = 0  # If no results, set count to 0
+        
         # Append the count to the base code for uniqueness
         unique_code = f"{base_code}{count + 1:03d}"  # e.g., AI10124S1001
         return unique_code
@@ -222,3 +286,23 @@ class Unit:
         params = (unit_name, unit_code, school,course, year_offered, semester_offered)
         execute_query(db, query, params)
 
+    @staticmethod
+    def get_all_units(db):
+        """Fetch all units from the database."""
+        query = """
+        SELECT unit_name, unit_code, school, course, year_offered, semester_offered
+        FROM units
+        """
+        results = fetch_all(db, query)
+        units = []
+        for result in results:
+            unit = Unit(
+                unit_name=result['unit_name'],
+                unit_code=result['unit_code'],
+                school=result['school'],
+                course=result['course'],
+                year_offered=result['year_offered'],
+                semester_offered=result['semester_offered']
+            )
+            units.append(unit)
+        return units

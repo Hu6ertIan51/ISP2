@@ -46,15 +46,21 @@
                 <h2>Manage User Activities</h2>
             </div>
                 <div class="personal-info">
-                    <h2>Manage User Accounts</h2>
+                    <h2>View Users</h2>
                 <div class="profile-info">
 
                     <div class="button-container">
-                        <button class="analytics-btn" onclick="window.location.href='{{ url_for('main.register')}}'">
-                            <i class="fa-solid fa-user-plus"></i> Register Users
+                        <button class="analytics-btn" onclick="window.location.href='{{ url_for('main.viewstudents')}}'">
+                            <i class="fa-solid fa-user-plus"></i> View Students
                         </button>
-                        <button class="analytics-btn" onclick="window.location.href='{{url_for('main.viewusers')}}'">
-                            <i class="fa-solid fa-user-plus"></i> View Users
+                        <button class="analytics-btn" onclick="window.location.href='{{url_for('main.viewlecturers')}}'">
+                            <i class="fa-solid fa-user-plus"></i> View Lecturers
+                        </button>
+                        <button class="analytics-btn" onclick="window.location.href=''">
+                            <i class="fa-solid fa-user-plus"></i> View Mentors
+                        </button>
+                        <button class="analytics-btn" onclick="window.location.href=''">
+                            <i class="fa-solid fa-user-plus"></i> View Faculty Admins
                         </button>
                     </div>
                     

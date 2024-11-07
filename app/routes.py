@@ -353,6 +353,48 @@ def mentor_dashboard():
 def manageusers():
     return render_template('AdminModule/ManageUser.html')
 
+@main.route('/managecourseinfo')
+@login_required
+@role_required('0')
+def managecourseinfo():
+    return render_template('AdminModule/ManageCourse.html')
+
+@main.route('/viewusers')
+@login_required
+@role_required('0')
+def viewusers():
+    return render_template('/AdminModule/ViewUsers.html')
+
+@main.route('/viewstudents')
+@login_required
+@role_required('0')
+def viewstudents():
+    # Get database connection
+    db = get_db_connection()
+    # Fetch all student records
+    student_list = Student.get_all_students(db)
+    return render_template('/AdminModule/ViewStudents.html', students=student_list)
+
+@main.route('/viewlecturers')
+@login_required
+@role_required('0')
+def viewlecturers():
+    # Get database connection
+    db = get_db_connection()
+    # Fetch all lecturer records
+    lecturers = Lecturer.get_all_lecturers(db)
+    return render_template('/AdminModule/ViewLecturers.html', lecturers=lecturers)
+
+@main.route('/viewunits')
+@login_required
+@role_required('0')
+def viewunits():
+    # Get database connection
+    db = get_db_connection()
+    # Fetch all unit records
+    units = Unit.get_all_units(db)
+    return render_template('/AdminModule/ViewUnits.html', units=units)
+
 @main.route('/success')
 def success_page():
     return render_template('Message.html')

@@ -331,5 +331,66 @@ footer {
     align-items: flex-start; /* Align buttons to the start of the container */
 }
 
+.user-info h2 {
+    font-size: 20px; /* Reduce font size */
+    width: 1000px;
+    padding: 6px 10px; /* Adjust padding */
+    background-color: #3E4961; /* Keep the same background color */
+    color: white;
+    border-radius: 5px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* Container styling for vertical stacking */
+.personal-user-info {
+    width: 100%;
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+}
+
+/* Ensure each section stacks vertically */
+.user-info {
+    width: 100%;
+    margin-bottom: 20px; /* Space between sections */
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+}
+
+/* Styling for student table */
+#studentTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+#studentTable th, #studentTable td {
+    border: 1px solid #3E4961;
+    padding: 10px;
+    text-align: left;
+}
+
+#studentTable th {
+    background-color: #3E4961;
+    color: white;
+    font-weight: bold;
+}
+
+#studentTable td {
+    color: #293040;
+}
+
+.user-info td:nth-child(1), .user-info th:nth-child(1) {
+    width: 50px; /* Set a fixed width for the ID column */
+    max-width: 50px; /* Limit the width if necessary */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; /* Prevents wrapping */
+
+}
+
+
+
+
 
 
