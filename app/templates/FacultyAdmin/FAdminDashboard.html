@@ -33,7 +33,7 @@
             <p>Admin Navigation Panel</p>
             <ul>
                 <li><i class="fa-solid fa-house" style="color: #6F251B;" class = "active"></i>
-                    <a href="{{url_for('main.admin_dashboard')}}">Admin Dashboard</a></li>
+                    <a href="{{url_for('main.admin_dashboard')}}">Faculty Admin Dashboard</a></li>
                 <li><i class="fa-regular fa-user" style="color: #6F251B"></i></i>
                     <a href="{{url_for('main.manageusers')}}">Manage User Accounts</a></li>
                 <li><i class="fa-solid fa-book" style="color:#6F251B;"></i>
@@ -45,14 +45,16 @@
             </ul>
         </div>
         <div class="main-content">
-                <h1>Welcome</h1>
+                <h1>Welcome, </h1>
                 <div class="personal-info">
                     <h2>System Admin Information</h2>
                 <div class="profile-info">
                     <img src="student.jpg" alt="">
                     <div class="student-details">
-                        <p><strong>Admin Name : {{admin.full_name}}</strong></p>
-                        <p><strong>Staff Number : {{admin.staff_number}}</strong></p>
+                        <p><strong>Name : {{fadmin.full_name}}</strong></p>
+                        <p><strong>Staff Number : {{fadmin.faculty_number}}</strong></p>
+                        <p><strong>Faculty : {{fadmin.faculty}}</strong></p>
+
                     </div>
                 </div>
             <section>
@@ -61,15 +63,15 @@
                     <table>
                         <tr>
                             <td><strong>Mobile Number:</strong></td>
-                            <td>{{admin.mobile_number}}</td>
+                            <td>{{fadmin.mobile_number}}</td>
                         </tr>
                         <tr>
                             <td><strong>Email Address:</strong></td>
-                            <td>{{admin.email}}</td>
+                            <td>{{fadmin.email}}</td>
                         </tr>
                         <tr>
                             <td><strong>Account Status:</strong></td>
-                            <td>{{admin.admin_status}}</td>
+                            <td>{{fadmin.faculty_status}}</td>
                         </tr>
                     </table>
                 </div>

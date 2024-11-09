@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
-from .models import User, Student, Lecturer, Unit
+from .models import User, Student, Lecturer, Unit, SystemAdmin, FacultyAdmin
 from .db import get_db_connection
 from functools import wraps
 from datetime import datetime
@@ -58,6 +58,8 @@ def login_user_view():
                     return redirect(url_for('main.lecturer_dashboard'))
                 elif user.role == '3':  # Mentor
                     return redirect(url_for('main.mentor_dashboard'))
+                elif user.role == '4':  # Faculty Admin
+                    return redirect(url_for('main.fadmindashboard'))
             else:
                 print("Incorrect password")  # Log incorrect password
         else:
@@ -72,7 +74,22 @@ def login_user_view():
 @login_required
 @role_required('0')  # Admin role
 def admin_dashboard():
-    return render_template('AdminModule/AdminDashboard.html')
+    user_id = current_user.id  # Get the logged-in user's ID
+    db_connection = get_db_connection()
+
+    # Fetch student details from the database
+    admin_details = SystemAdmin.find_by_user_id(user_id, db_connection)
+
+    # Handle case where student details are not found
+    if admin_details is None:
+        flash('Admin details not found.', 'error')
+        return redirect(url_for('main.login_user_view'))  # Redirect to a safe page
+
+    # Convert academic_status to an integer if necessary, then map to "active" or "inactive"
+    admin_status = "Active" if int(admin_details.admin_status) == 0 else "Inactive"
+    admin_details.admin_status = admin_status
+
+    return render_template('AdminModule/AdminDashboard.html', admin=admin_details)
 
 @main.route('/register', methods=['GET', 'POST'])
 @login_required
@@ -110,18 +127,27 @@ def register():
                 flash('Registration successful! Please complete your student registration.', 'success')
                 print('Registration successful! Please complete your student registration.')
                 return redirect(url_for('main.register_student', user_id=user.id))  # Pass user_id as query parameter
+            
             elif role == '0':  # Admin
                 flash('Registration successful! Welcome Admin.', 'success')
                 print('Registration successful! Welcome Admin.')
-                return redirect(url_for('main.login_user_view'))  # Update with actual admin dashboard route
+                return redirect(url_for('main.admin_registration', user_id=user.id))  # Update with actual admin dashboard route
+            
             elif role == '2':  # Lecturer
                 flash('Registration successful! Welcome Lecturer.', 'success')
                 print('Registration successful! Welcome Lecturer.')
                 return redirect(url_for('main.register_lecturer', user_id=user.id))  # Update with actual lecturer dashboard route
+            
             elif role == '3':  # Mentor
                 flash('Registration successful! Welcome Mentor.', 'success')
                 print('Registration successful! Welcome Mentor.')
                 return redirect(url_for('main.mentor_dashboard'))  # Update with actual mentor dashboard route
+            
+            elif role == '4':  # Faculty Admin
+                flash('Registration successful! Welcome Faculty Admin.', 'success')
+                print('Registration successful! Welcome Faculty Admin.')
+                return redirect(url_for('main.fadmin_registration', user_id=user.id))  # Update with actual faculty admin dashboard route
+            
             else:
                 flash('Registration successful!', 'success')
                 return redirect(url_for('main.login_user_view'))  # Fallback to login if role is unknown
@@ -232,6 +258,119 @@ def register_student():
             flash(f"An error occurred while registering the student: {str(e)}", "error")
             print(f"An error occurred while registering the student: {str(e)}")
             return redirect(url_for('main.success_page'))
+
+@main.route('/admin_registration', methods=['GET', 'POST'])
+@login_required
+@role_required('0')
+def admin_registration():
+    db_connection = get_db_connection()
+
+    # Handle GET request
+    if request.method == 'GET':
+        user_id = request.args.get('user_id')
+        if not user_id:
+            flash("User ID is required to register a System admin.", "error")
+            print("User ID is required to register a System admin.")
+            return redirect(url_for('main.login_user_view'))
+        
+        staff_number = SystemAdmin.generate_staff_number(db_connection)
+        
+        return render_template(
+            '/AdminModule/AdminRegistration.html',
+            user_id=user_id,
+            staff_number=staff_number
+        )
+
+    elif request.method == 'POST':
+        # Retrieve form data
+        user_id = request.form.get('user_id')
+        staff_number = request.form['staff_number']
+        year_registered = request.form['year_registered']
+        admin_status = request.form['admin_status']
+
+        try:
+            # Convert user_id to integer
+            user_id = int(user_id)
+
+            # Format the year_intake to "Month-Year"
+            formatted_year_registration = datetime.strptime(year_registered, "%Y-%m").strftime("%B-%Y")
+
+            # Save student record
+            SystemAdmin.create_system_admin(
+                user_id, staff_number, formatted_year_registration, admin_status, db_connection
+            )  
+            flash('Admin registration successful!', 'success')
+            print('Admin registration successful!')
+            return redirect(url_for('main.login_user_view'))
+        
+        except ValueError as ve:
+            flash(f"User ID error: {str(ve)}", "error")
+            print(f"User ID error: {str(ve)}")
+            return redirect(url_for('main.admin_registration'))
+        
+        except Exception as e:
+            flash(f"An error occurred while registering the admin: {str(e)}", "error")
+            print(f"An error occurred while registering the admin: {str(e)}")
+            return redirect(url_for('main.success_page'))
+        
+    return render_template('AdminModule/AdminRegistration.html')    
+
+@main.route('/fadmin_registration', methods=['GET', 'POST'])
+#@login_required
+#@role_required('0')
+def fadmin_registration():
+    db_connection = get_db_connection()
+
+    # Handle GET request
+    if request.method == 'GET':
+        user_id = request.args.get('user_id')
+        if not user_id:
+            flash("User ID is required to register a Faculty Admin.", "error")
+            print("User ID is required to register a Faculty Admin.")
+            return redirect(url_for('main.login_user_view'))
+    
+        # Generate a unique faculty number once, during GET
+        faculty_number = FacultyAdmin.generate_faculty_number(db_connection)
+        
+        return render_template(
+            '/AdminModule/FAdminRegistration.html',
+            user_id=user_id,
+            faculty_number=faculty_number
+        )
+
+    elif request.method == 'POST':
+        # Retrieve form data
+        user_id = request.form.get('user_id')
+        school = request.form['school']
+        faculty = request.form['faculty']
+        faculty_number = request.form['faculty_number']
+        faculty_status = request.form['faculty_status']
+
+        try:
+            # Convert user_id to integer
+            user_id = int(user_id)
+
+
+            # Save faculty admin record
+            FacultyAdmin.create_faculty_admin(
+                user_id, school, faculty, faculty_number, faculty_status, db_connection
+            )
+            flash('Faculty Admin registration successful!', 'success')
+            print('Faculty Admin registration successful!')
+            return redirect(url_for('main.login_user_view'))
+        
+        except ValueError as ve:
+            flash(f"User ID error: {str(ve)}", "error")
+            print(f"User ID error: {str(ve)}")
+            return redirect(url_for('main.fadmin_registration'))
+        
+        except Exception as e:
+            flash(f"An error occurred while registering the Faculty Admin: {str(e)}", "error")
+            print(f"An error occurred while registering the Faculty Admin: {str(e)}")
+            return redirect(url_for('main.login_user_view'))
+
+    
+    return render_template('/AdminModule/FAdminRegistration.html')
 
 
 @main.route('/student_dashboard', methods=['GET'])
@@ -358,6 +497,28 @@ def manageusers():
 @role_required('0')
 def managecourseinfo():
     return render_template('AdminModule/ManageCourse.html')
+
+@main.route('/fadmindashboard')
+@login_required
+@role_required('4')
+def fadmindashboard():
+    
+    user_id = current_user.id  # Get the logged-in user's ID
+    db_connection = get_db_connection()
+
+    # Fetch student details from the database
+    fadmin_details = FacultyAdmin.find_by_user_id(user_id, db_connection)
+
+    # Handle case where student details are not found
+    if fadmin_details is None:
+        flash('Faculty Admin details not found.', 'error')
+        return redirect(url_for('main.login_user_view'))  # Redirect to a safe page
+
+    # Convert academic_status to an integer if necessary, then map to "active" or "inactive"
+    faculty_status = "Active" if int(fadmin_details.faculty_status) == 0 else "Inactive"
+    fadmin_details.faculty_status = faculty_status
+    
+    return render_template('FacultyAdmin/FAdminDashboard.html', fadmin=fadmin_details)
 
 @main.route('/viewusers')
 @login_required

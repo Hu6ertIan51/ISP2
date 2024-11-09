@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSense Faculty Admin Registration</title>
+    <style>
+        /* Styling for full-page layout */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Styling for the left section (form section) */
+        .left-section {
+            flex: 0.7;
+            max-width: 400px; 
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .left-section h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        /* Form input and select styling */
+        .left-section input[type="text"],
+        .left-section select,
+        .left-section input.username,
+        .left-section input.education-status {
+            width: 100%;
+            padding: 10px 0;
+            margin: 10px 0;
+            border: none;
+            border-bottom: 2px solid #ccc;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .left-section input[type="text"][readonly] {
+            background-color: #f0f0f0;
+            border-bottom: 2px solid #ccc;
+        }
+
+        .left-section input::placeholder {
+            color: #888;
+        }
+
+        .left-section input:focus,
+        .left-section select:focus {
+            border-bottom: 2px solid #2C2C2C;
+        }
+
+        /* Styling for the submit button */
+        .left-section button {
+            padding: 15px;
+            background-color: #293040;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        /* Styling for the right section (info display) */
+        .right-section {
+            flex: 1.3;
+            background-color: #2C344A;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .right-section h1 {
+            font-size: 48px;
+            margin: 0;
+        }
+
+        .right-section p {
+            font-size: 20px;
+            color: #E64545;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <h1>Register Faculty Admin</h1>
+            <form method="POST" action="/fadmin_registration">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text" name="user_id" value="{{ user_id }}" readonly>
+                
+                <!-- School selection with onchange event to trigger updateFaculties() -->
+                <select name="school" id="school" onchange="updateFaculties()" required>
+                    <option value="">Select School</option>
+                    <option value="SOB">School of Business (SOB)</option>
+                    <option value="SCES">School of Computing and Engineering Sciences (SCES)</option>
+                </select>
+                
+                <!-- Faculty dropdown, dynamically populated based on school selection -->
+                <select name="faculty" id="faculty" required disabled>
+                    <option value="">Select Faculty</option>
+                </select>
+                
+                <input type="text" name="faculty_number" id="faculty_number" value="{{ faculty_number }}" readonly placeholder="Faculty ID Number">
+                
+                <select name="faculty_status" id="academic" required>
+                    <option value="">Select Status</option>
+                    <option value="0">Active</option>
+                    <option value="1">Inactive</option>
+                </select>
+
+                <button type="submit">Register Faculty Admin</button> 
+            </form>
+        </div>
+        
+        <div class="right-section">
+            <h1>EduSense</h1>
+            <p>Faculty Admin Registration Page</p>
+        </div>
+    </div>    
+
+    <script>
+        // Define faculties based on selected school
+        const faculties = {
+            SOB: [
+                { value: 'FOB', text: 'Faculty of Business' }
+            ],
+            SCES: [
+                { value: 'FIT', text: 'Faculty of Information Technology' }
+            ]
+        };
+
+        // Function to update faculty dropdown based on selected school
+        function updateFaculties() {
+            const schoolSelect = document.getElementById('school');
+            const facultySelect = document.getElementById('faculty');
+            const selectedSchool = schoolSelect.value;
+
+            // Reset faculty dropdown options
+            facultySelect.innerHTML = '<option value="">Select Faculty</option>';
+
+            if (selectedSchool) {
+                // Populate faculty dropdown based on selected school
+                faculties[selectedSchool].forEach(faculty => {
+                    const option = document.createElement('option');
+                    option.value = faculty.value;
+                    option.textContent = faculty.text;
+                    facultySelect.appendChild(option);
+                });
+                facultySelect.disabled = false; // Enable faculty dropdown
+            } else {
+                facultySelect.disabled = true; // Disable faculty dropdown if no school selected
+            }
+        }
+    </script>
+</body>
+</html>

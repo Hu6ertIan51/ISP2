@@ -45,3 +45,24 @@ CREATE TABLE IF NOT EXISTS units (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS sysadmin (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    staff_number VARCHAR(30) NOT NULL,
+    year_registered VARCHAR(30) NOT NULL,
+    admin_status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS faculty_admin (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    school VARCHAR(255) NOT NULL,
+    faculty VARCHAR(255) NOT NULL,
+    faculty_number VARCHAR(30) NOT NULL,
+    faculty_status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);  
+

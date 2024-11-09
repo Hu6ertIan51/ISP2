@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduSense User Registration</title>
+    <title>EduSense Admin Registration</title>
     <style>
         body, html {
             margin: 0;
@@ -36,15 +36,22 @@
         .left-section input[type="password"],
         .left-section input[type="number"],
         .left-section input[type="date"],
-        .left-section select {
+        .left-section select,
+        .left-section input.username,
+        .left-section input.education-status {
             width: 100%;
             padding: 10px 0;
-            margin: 20px 0;
+            margin: 10px 0; /* Adjusted margin */
             border: none;
             border-bottom: 2px solid #ccc;
             font-size: 16px;
             outline: none;
             transition: border-color 0.3s;
+        }
+
+        .left-section input[type="text"][readonly] {
+            background-color: #f0f0f0;
+            border-bottom: 2px solid #ccc;
         }
 
         .left-section input::placeholder {
@@ -64,10 +71,12 @@
             border-radius: 5px;
             font-size: 18px;
             cursor: pointer;
+            width: 100%;
+            margin-top: 20px; /* Add margin-top for separation */
         }
 
         .right-section {
-            flex: 1.3; 
+            flex: 1.3;
             background-color: #2C344A;
             color: #ffffff;
             display: flex;
@@ -75,9 +84,9 @@
             align-items: center;
             flex-direction: column;
             border-top-left-radius: 10px;
-            border-bottom-left-radius: 10px; 
-            padding: 40px; 
-            box-sizing: border-box; 
+            border-bottom-left-radius: 10px;
+            padding: 40px;
+            box-sizing: border-box;
         }
 
         .right-section h1 {
@@ -95,33 +104,28 @@
 <body>
     <div class="container">
         <div class="left-section">
-            <h1>Register User</h1>
-            <form method="POST" action="{{ url_for('main.register') }}">
+            <h1>Register Admin</h1>
+            <form method="POST" action="/admin_registration">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="text" placeholder="Full Name" name="full_name" required>
-                <input type="text" placeholder="Email" name="email" required>
-                <input type="password" placeholder="Password" name="password" required>
-                <input type="date" name="dob" placeholder="DOB" required>
-                <input type="text" placeholder="Mobile Number" name="mobile_number" required>
-                <select name="gender" required>
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                <input type="text" name="user_id" value="{{ user_id }}" readonly>
+                
+                <input type="text" name="staff_number" id="staff_number" value="{{ staff_number }}" readonly placeholder="Staff Number">
+
+                <input type="month" name="year_registered" placeholder="year_registration" required>
+
+                <select name="admin_status" id="" required>
+                    <option value="">Select Status</option>
+                    <option value="0">Active</option>
+                    <option value="1">Inactive</option>
                 </select>
-                <select name="role" required>
-                    <option value="0">Admin</option>
-                    <option value="4">Faculty Admin</option>
-                    <option value="1">Student</option>
-                    <option value="2">Lecturer</option>
-                    <option value="3">Mentor</option>
-                </select>
-                <button type="submit">Register</button> 
-            </form>            
+
+                <button type="submit">Register Admin</button> 
+            </form>
         </div>
+        
         <div class="right-section">
             <h1>EduSense</h1>
-            <p>Registration Page</p>
+            <p>Admin Registration Page</p>
         </div>
     </div>    
 </body>

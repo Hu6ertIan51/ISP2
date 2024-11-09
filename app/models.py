@@ -52,6 +52,64 @@ class User(UserMixin):  # Inherit from UserMixin
 import random
 from app.db import fetch_one, execute_query  # Ensure these are properly imported
 
+class SystemAdmin:
+    def __init__(self, user_id, staff_number, year_registered, admin_status, full_name=None, mobile_number=None, email=None):
+        self.user_id = user_id
+        self.staff_number = staff_number
+        self.year_registered = year_registered
+        self.admin_status = admin_status
+        self.full_name = full_name
+        self.mobile_number = mobile_number
+        self.email = email
+
+
+    @staticmethod
+    def generate_staff_number(db):
+        """Generate a unique staff number."""
+        while True:
+            random_number = random.randint(1000, 9999)
+            staff_number = f"SA-{random_number}"  # Prefix with 'S'
+
+            # Check if the staff number already exists
+            query = "SELECT COUNT(*) AS count FROM sysadmin WHERE staff_number = %s"
+            result = fetch_one(db, query, (staff_number,))
+
+            if result['count'] == 0:  # Unique staff number found
+                return staff_number
+    
+    @staticmethod
+    def create_system_admin(user_id, staff_number, year_registered, admin_status, db):
+        staff_number = SystemAdmin.generate_staff_number(db)
+        query = """
+        INSERT INTO sysadmin (user_id, staff_number, year_registered, admin_status)
+        VALUES (%s, %s, %s, %s)
+        """
+        params = (user_id, staff_number, year_registered, admin_status)
+        execute_query(db, query, params)
+
+    @staticmethod
+    def find_by_user_id(user_id, db):
+        """Query admin details by user ID, including the admin's name."""
+        query = """
+        SELECT u.full_name, sa.user_id, sa.staff_number, sa.year_registered, u.mobile_number, u.email, sa.admin_status
+        FROM sysadmin sa
+        JOIN users u ON sa.user_id = u.id
+        WHERE sa.user_id = %s
+        """
+        result = fetch_one(db, query, (user_id,))
+        if result:
+            return SystemAdmin(
+                user_id=result['user_id'],
+                staff_number=result['staff_number'],
+                full_name=result['full_name'],
+                year_registered=result['year_registered'],
+                mobile_number=result['mobile_number'],
+                email=result['email'],
+                admin_status=result['admin_status']
+            )
+        return None
+
+
 class Student:
     def __init__(self, user_id, school, course, admission_number, current_year, year_intake, academic_status, full_name = None, mobile_number = None, email = None):
         self.user_id = user_id
@@ -65,7 +123,6 @@ class Student:
         self.year_intake = year_intake
         self.academic_status = academic_status
 
-        #self.education_status = education_status
 
     @staticmethod
     def generate_admission_number(db):
@@ -306,3 +363,61 @@ class Unit:
             )
             units.append(unit)
         return units
+    
+class FacultyAdmin:
+    def __init__(self, user_id, school, faculty, faculty_number, faculty_status, full_name=None, mobile_number=None, email=None):
+        self.user_id = user_id
+        self.school = school
+        self.faculty = faculty
+        self.faculty_number = faculty_number
+        self.faculty_status = faculty_status
+        self.full_name = full_name
+        self.mobile_number = mobile_number
+        self.email = email
+
+    @staticmethod
+    def generate_faculty_number(db):
+        """Generate a unique faculty number."""
+        while True:
+            random_number = random.randint(1000, 9999)
+            faculty_number = f"F{random_number}"  # Prefix with 'F'
+
+            # Check if the faculty number already exists
+            query = "SELECT COUNT(*) AS count FROM faculty_admin WHERE faculty_number = %s"
+            result = fetch_one(db, query, (faculty_number,))
+
+            if result['count'] == 0:  # Unique faculty number found
+                return faculty_number
+            
+    @staticmethod
+    def create_faculty_admin(user_id, school, faculty, faculty_number, faculty_status, db):
+        faculty_number = FacultyAdmin.generate_faculty_number(db)
+        query = """
+        INSERT INTO faculty_admin (user_id, school, faculty, faculty_number, faculty_status)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        params = (user_id, school, faculty, faculty_number, faculty_status)
+        execute_query(db, query, params)
+
+    @staticmethod
+    def find_by_user_id(user_id, db):
+        """Query faculty admin details by user ID, including the faculty admin's name."""
+        query = """
+        SELECT u.full_name, fa.user_id, fa.school, fa.faculty, fa.faculty_number, u.mobile_number, u.email, fa.faculty_status
+        FROM faculty_admin fa
+        JOIN users u ON fa.user_id = u.id
+        WHERE fa.user_id = %s
+        """
+        result = fetch_one(db, query, (user_id,))
+        if result:
+            return FacultyAdmin(
+                user_id=result['user_id'],
+                school=result['school'],
+                faculty=result['faculty'],
+                faculty_number=result['faculty_number'],
+                full_name=result['full_name'],
+                mobile_number=result['mobile_number'],
+                email=result['email'],
+                faculty_status=result['faculty_status']
+            )
+        return None
