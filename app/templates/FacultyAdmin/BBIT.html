@@ -96,11 +96,18 @@
                                         <td>
                                             <form action="{{ url_for('main.post_unit', unit_id=unit.id) }}" method="POST" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="add-unit-btn" title="Post Unit">
-                                                    <i class="fa-solid fa-plus"></i> Post Unit
-                                                </button>
+                                                
+                                                {% if unit.status == 'Active' %}
+                                                    <button type="submit" class="add-unit-btn" title="Unit Already Posted" disabled>
+                                                        <i class="fa-solid fa-check"></i> Unit Posted
+                                                    </button>
+                                                {% else %}
+                                                    <button type="submit" class="add-unit-btn" title="Post Unit">
+                                                        <i class="fa-solid fa-plus"></i> Post Unit
+                                                    </button>
+                                                {% endif %}
                                             </form>
-                                        </td>
+                                        </td>                                        
                                     </tr>
                                     {% endfor %}
                             </tbody>

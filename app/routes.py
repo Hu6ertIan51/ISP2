@@ -599,31 +599,30 @@ def viewunits():
 
 @main.route('/post_unit/<int:unit_id>', methods=['POST'])
 @login_required
-@role_required('4') 
+@role_required('4')
 def post_unit(unit_id):
     db = get_db_connection()
     try:
-        # Update the status in the database
         cursor = db.cursor()
-        cursor.execute("UPDATE units SET status = %s WHERE id = %s", ('Active', unit_id))
+        cursor.execute("UPDATE units SET status = %s WHERE id = %s", ('Active', unit_id))  # Ensure status is set to 'Posted'
         db.commit()
-        print(f"Unit {unit_id} posted successfully.")
         flash('Unit posted successfully.', 'success')
     except Exception as e:
         db.rollback()
         flash(f'Error posting unit: {str(e)}', 'error')
-        print(f'Error posting unit: {str(e)}')  
     finally:
         cursor.close()
-    
-    return redirect(url_for('main.fadmindashboard'))
+
+    return redirect(url_for('main.fadmindashboard'))  # Make sure to redirect to reload the page
 
 @main.route('/OngoingUnits')
 @login_required
 @role_required('4')
-def OngoingUnits():
-
-    return render_template('FacultyAdmin/OngoingUnits.html')
+def OngoingUnits(): 
+    # Assuming db is your database connection
+    db = get_db_connection()  # Your method to get a database connection
+    units = Unit.get_active_units(db)
+    return render_template('FacultyAdmin/OngoingUnits.html', units=units)
 
 @main.route('/success')
 def success_page():

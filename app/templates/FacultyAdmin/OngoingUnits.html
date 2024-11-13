@@ -85,23 +85,24 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                
+                                {% for unit in units %}
                                     <tr>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
+                                        <td>{{ unit.unit_name }}</td>
+                                        <td>{{ unit.unit_code }}</td>
+                                        <td>{{ unit.school }}</td>
+                                        <td>{{ unit.course }}</td>
+                                        <td>{{ unit.year_offered }}</td>
+                                        <td>{{ unit.semester_offered }}</td>
                                         <td>
                                             <form action="" method="POST" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="add-unit-btn" title="Post Unit">
-                                                    <i class="fa-solid fa-plus"></i> Unpost Unit
+                                                <button type="submit" class="add-unit-btn" title="Unpost Unit">
+                                                    <i class="fa-solid fa-minus"></i> Unpost Unit
                                                 </button>
                                             </form>
                                         </td>
                                     </tr>
+                                {% endfor %} 
                             </tbody>
                         </table>
                     </div> 

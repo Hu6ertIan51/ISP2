@@ -418,6 +418,33 @@ class Unit:
             units.append(unit)
         return units
     
+    @staticmethod
+    def get_active_units(db, status="Active"):
+        """Fetch all units with a specific status from the database."""
+        query = """
+        SELECT id, unit_name, unit_code, school, course, year_offered, semester_offered, status
+        FROM units
+        WHERE status = %s
+        """
+        params = (status,)
+        results = fetch_all(db, query, params)
+
+        units = []
+        for result in results:
+            unit = Unit(
+                id=result['id'],
+                unit_name=result['unit_name'],
+                unit_code=result['unit_code'],
+                school=result['school'],
+                course=result['course'],
+                year_offered=result['year_offered'],
+                semester_offered=result['semester_offered'],
+                status=result['status'] 
+            )
+            units.append(unit)
+    
+        return units
+
 class FacultyAdmin:
     def __init__(self, user_id, school, faculty, faculty_number, faculty_status, full_name=None, mobile_number=None, email=None):
         self.user_id = user_id
