@@ -48,10 +48,7 @@ class User(UserMixin):  # Inherit from UserMixin
 
     def __repr__(self):
         return f"<User {self.full_name}, Role: {self.role}>"
-
-import random
-from app.db import fetch_one, execute_query  # Ensure these are properly imported
-
+    
 class SystemAdmin:
     def __init__(self, user_id, staff_number, year_registered, admin_status, full_name=None, mobile_number=None, email=None):
         self.user_id = user_id
@@ -109,9 +106,8 @@ class SystemAdmin:
             )
         return None
 
-
 class Student:
-    def __init__(self, user_id, school, course, admission_number, current_year, year_intake, academic_status, full_name = None, mobile_number = None, email = None):
+    def __init__(self, user_id, school, course, admission_number, current_year, year_intake, international, academic_status, full_name = None, mobile_number = None, email = None):
         self.user_id = user_id
         self.school= school
         self.course = course
@@ -121,6 +117,7 @@ class Student:
         self.mobile_number = mobile_number
         self.email = email
         self.year_intake = year_intake
+        self.international = international
         self.academic_status = academic_status
 
 
@@ -139,21 +136,21 @@ class Student:
             if result['count'] == 0:  # Unique admission number found
                 return admission_number
 
-    @staticmethod
-    def create_student(user_id, school, course, admission_number, current_year, year_intake, academic_status, db):
+    @staticmethod 
+    def create_student(user_id, school, course, admission_number, current_year, year_intake, international, academic_status, db):
         admission_number = Student.generate_admission_number(db)
         query = """
-        INSERT INTO student_details (user_id, school, course, admission_number, current_year, year_intake, academic_status)
-        VALUES (%s,%s,%s,%s,%s,%s,%s)
+        INSERT INTO student_details (user_id, school, course, admission_number, current_year, year_intake, international, academic_status)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
         """
-        params = (user_id, school, course, admission_number, current_year, year_intake, academic_status)
+        params = (user_id, school, course, admission_number, current_year, year_intake, international, academic_status)
         execute_query(db, query, params)
 
     @staticmethod
     def find_by_user_id(user_id, db):
         """Query student details by user ID, including the student's name."""
         query = """
-        SELECT u.full_name, sd.user_id, sd.school, sd.course, sd.admission_number, sd.current_year, u.mobile_number, u.email, sd.year_intake, sd.academic_status
+        SELECT u.full_name, sd.user_id, sd.school, sd.course, sd.admission_number, sd.current_year, u.mobile_number, u.email, sd.year_intake, sd.international, sd.academic_status
         FROM student_details sd
         JOIN users u ON sd.user_id = u.id
         WHERE sd.user_id = %s
@@ -170,6 +167,7 @@ class Student:
                 mobile_number=result['mobile_number'],
                 email=result['email'],
                 year_intake=result['year_intake'],
+                international=result['international'],
                 academic_status=result['academic_status']
             )
         return None
@@ -293,13 +291,15 @@ class Lecturer:
         return lecturers
     
 class Unit:
-    def __init__(self, unit_name, unit_code, school, course, year_offered, semester_offered):
+    def __init__(self, id, unit_name, unit_code, school, course, year_offered, semester_offered, status):
+        self.id = id
         self.unit_name = unit_name
         self.unit_code = unit_code
         self.school = school
         self.course = course
         self.year_offered = year_offered
         self.semester_offered = semester_offered
+        self.status = status
 
     
     def generate_unit_code(unit_name, course, year_offered, semester_offered, db):
@@ -335,22 +335,76 @@ class Unit:
         return unique_code
 
     @staticmethod
-    def create_unit(unit_name, unit_code, school, course, year_offered, semester_offered, db):
+    def create_unit(unit_name, unit_code, school, course, year_offered, semester_offered, status, db):
         query = """
-        INSERT INTO units (unit_name, unit_code, school, course, year_offered, semester_offered)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO units (unit_name, unit_code, school, course, year_offered, semester_offered, status)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        params = (unit_name, unit_code, school,course, year_offered, semester_offered)
+        params = (unit_name, unit_code, school,course, year_offered, semester_offered, status)
         execute_query(db, query, params)
 
     @staticmethod
     def get_all_units(db):
         """Fetch all units from the database."""
         query = """
-        SELECT unit_name, unit_code, school, course, year_offered, semester_offered
+        SELECT unit_name, unit_code, school, course, year_offered, semester_offered, status
         FROM units
         """
         results = fetch_all(db, query)
+        units = []
+        for result in results:
+            # Convert status from 0/1 to "Active"/"Inactive"
+            status = "Active" if result['status'] == 0 else "Inactive"
+            
+            unit = Unit(
+                unit_name=result['unit_name'],
+                unit_code=result['unit_code'],
+                school=result['school'],
+                course=result['course'],
+                year_offered=result['year_offered'],
+                semester_offered=result['semester_offered'],
+                status=status 
+            )
+            units.append(unit)
+        return units
+    
+    @staticmethod
+    def get_bbit_units(db):
+        """Fetch all units for the BBIT course from the database."""
+        query = """
+        SELECT id, unit_name, unit_code, school, course, year_offered, semester_offered, status
+        FROM units
+        WHERE course = %s
+        """
+        params = ('BBIT',)
+        results = fetch_all(db, query, params)
+        
+        units = []
+        for result in results:
+            unit = Unit(
+                id=result['id'],
+                unit_name=result['unit_name'],
+                unit_code=result['unit_code'],
+                school=result['school'],
+                course=result['course'],
+                year_offered=result['year_offered'],
+                semester_offered=result['semester_offered'],
+                status=result['status']
+            )
+            units.append(unit)
+        return units
+    
+    @staticmethod
+    def get_compsci_units(db):
+        """Fetch all units for the Computer Science course from the database."""
+        query = """
+        SELECT unit_name, unit_code, school, course, year_offered, semester_offered
+        FROM units
+        WHERE course = %s
+        """
+        params = ('BSC',)
+        results = fetch_all(db, query, params)
+        
         units = []
         for result in results:
             unit = Unit(

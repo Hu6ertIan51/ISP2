@@ -30,9 +30,9 @@
             <p>Admin Navigation Panel</p>
             <ul>
                 <li><i class="fa-solid fa-house" style="color: #6F251B;" class = "active"></i>
-                    <a href="{{url_for('main.admin_dashboard')}}">Admin Dashboard</a></li>
+                    <a href="">Admin Dashboard</a></li>
                 <li><i class="fa-regular fa-user" style="color: #6F251B"></i></i>
-                    <a href="{{url_for('main.manageusers')}}">Manage User Accounts</a></li>
+                    <a href="">Manage User Accounts</a></li>
                 <li><i class="fa-solid fa-book" style="color:#6F251B;"></i>
                     <a href="">Manage Course Information</a></li>
                 <li><i class="fa-regular fa-bell" style="color:#6F251B;"></i></i>
@@ -43,41 +43,43 @@
         </div>
         <div class="main-content">
             <div class="spaceforbanner">
-                <h2>Manage Course Information</h2>
+                <h2>Manage Courses</h2>
             </div>
-                    <div class="personal-user-info">
-                        <h2>View Units</h2>
-                        <div class="user-info">
-                            <table id="studentTable">
-                                <thead>
+                <div class="personal-info">
+                    <h2>Computer Science Units</h2>
+                <div class="profile-info">
+                    <div class="user-info">
+                        <table id="studentTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">Unit Name</th>
+                                    <th>Unit Code</th>
+                                    <th>School</th>
+                                    <th>Course</th>
+                                    <th>Year Offered</th>
+                                    <th>Semester offered</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for unit in units %}
                                     <tr>
-                                        <th style="width: 25%;">Unit Name</th>
-                                        <th>Unit Code</th>
-                                        <th>School</th>
-                                        <th>Course</th>
-                                        <th>Year Offered</th>
-                                        <th>Semester offered</th>
-                                        <th>Unit Status</th>
+                                        <td>{{ unit.unit_name }}</td>
+                                        <td>{{ unit.unit_code }}</td>
+                                        <td>{{ unit.school }}</td>
+                                        <td>{{ unit.course }}</td>
+                                        <td>{{ unit.year_offered }}</td>
+                                        <td>{{ unit.semester_offered }}</td>
+                                        <td>
+                                            <a href="" class="add-unit-btn" title="Post Unit">
+                                                <i class="fa-solid fa-plus"></i> Post Unit
+                                            </a>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {% for unit in units %}
-                                        <tr>
-                                            <td>{{ unit.unit_name }}</td>
-                                            <td>{{ unit.unit_code }}</td>
-                                            <td>{{ unit.school }}</td>
-                                            <td>{{ unit.course }}</td>
-                                            <td>{{ unit.year_offered }}</td>
-                                            <td>{{ unit.semester_offered }}</td>
-                                            <td>{{ unit.status }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div> 
             </div>
             </section>
             <footer>

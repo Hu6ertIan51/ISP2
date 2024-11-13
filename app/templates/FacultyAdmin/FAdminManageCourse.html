@@ -6,6 +6,30 @@
     <title>EduSense Admin Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://kit.fontawesome.com/aa11ee7bbf.js" crossorigin="anonymous"></script>
+    
+    <style>
+        /* Styling for vertical button layout */
+        .profile-info {
+            display: flex;
+            flex-direction: column; /* Stack button containers vertically */
+        }
+        .button-container {
+            margin-bottom: 10px; /* Adds spacing between buttons */
+            width: 100%; /* Ensures buttons are the same width */
+        }
+        .analytics-btn {
+            width: 25%;
+            padding: 10px;
+            font-size: 16px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .analytics-btn i {
+            margin-right: 8px; /* Space between icon and text */
+        }
+    </style>
 </head>
 <body>
     <div class="icon-container">     
@@ -30,9 +54,9 @@
             <p>Admin Navigation Panel</p>
             <ul>
                 <li><i class="fa-solid fa-house" style="color: #6F251B;" class = "active"></i>
-                    <a href="{{url_for('main.admin_dashboard')}}">Admin Dashboard</a></li>
+                    <a href="">Admin Dashboard</a></li>
                 <li><i class="fa-regular fa-user" style="color: #6F251B"></i></i>
-                    <a href="{{url_for('main.manageusers')}}">Manage User Accounts</a></li>
+                    <a href="">Manage User Accounts</a></li>
                 <li><i class="fa-solid fa-book" style="color:#6F251B;"></i>
                     <a href="">Manage Course Information</a></li>
                 <li><i class="fa-regular fa-bell" style="color:#6F251B;"></i></i>
@@ -43,40 +67,23 @@
         </div>
         <div class="main-content">
             <div class="spaceforbanner">
-                <h2>Manage Course Information</h2>
+                <h2>Manage User Activities</h2>
             </div>
-                    <div class="personal-user-info">
-                        <h2>View Units</h2>
-                        <div class="user-info">
-                            <table id="studentTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 25%;">Unit Name</th>
-                                        <th>Unit Code</th>
-                                        <th>School</th>
-                                        <th>Course</th>
-                                        <th>Year Offered</th>
-                                        <th>Semester offered</th>
-                                        <th>Unit Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for unit in units %}
-                                        <tr>
-                                            <td>{{ unit.unit_name }}</td>
-                                            <td>{{ unit.unit_code }}</td>
-                                            <td>{{ unit.school }}</td>
-                                            <td>{{ unit.course }}</td>
-                                            <td>{{ unit.year_offered }}</td>
-                                            <td>{{ unit.semester_offered }}</td>
-                                            <td>{{ unit.status }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                <div class="personal-info">
+                    <h2>Manage User Accounts</h2>
+                <div class="profile-info">
+
+                    <div class="button-container">
+                        <button class="analytics-btn" onclick="window.location.href='{{url_for('main.faunitdashboard')}}'">
+                            <i class="fa-solid fa-book"></i> View Units
+                        </button>
                     </div>
-                    
+
+                    <div class="button-container">
+                        <button class="analytics-btn" onclick="window.location.href='{{url_for('main.OngoingUnits')}}'">
+                            <i class="fa-solid fa-book"></i> In Progress Units
+                        </button>
+                    </div>
                     
             </div>
             </section>

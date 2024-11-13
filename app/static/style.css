@@ -389,6 +389,48 @@ footer {
 
 }
 
+.add-unit-btn {
+    display: inline-flex;
+    align-items: center;
+    color: #6F251B; /* Adjust color as needed */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.add-unit-btn:hover {
+    color: #a83232; /* Hover color */
+}
+
+.add-unit-btn i {
+    margin-right: 5px; /* Space between icon and text */
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.pagination a,
+.pagination span {
+    margin: 0 5px;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    text-decoration: none;
+    color: #6F251B;
+}
+
+.pagination a:hover {
+    background-color: #6F251B;
+    color: #fff;
+}
+
+.pagination .current {
+    background-color: #6F251B;
+    color: white;
+    font-weight: bold;
+}
+
 
 
 

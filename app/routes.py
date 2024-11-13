@@ -11,7 +11,6 @@ main = Blueprint('main', __name__)
 def login():
     return render_template('Login.html')
 
-
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -170,6 +169,7 @@ def register_unit():
         course = request.form['course']
         year_offered = request.form['year_offered']
         semester_offered = request.form['semester_offered']
+        status = request.form['status']
         
         # Get database connection
         db_connection = get_db_connection()
@@ -178,7 +178,7 @@ def register_unit():
         unit_code = Unit.generate_unit_code(unit_name, course, year_offered, semester_offered, db_connection)
 
         # Create the unit in the database with the generated unit_code
-        Unit.create_unit(unit_name, unit_code, school, course, year_offered, semester_offered, db_connection)
+        Unit.create_unit(unit_name, unit_code, school, course, year_offered, semester_offered, status, db_connection)   
         
         flash('Unit registered successfully!', 'success')
         return redirect(url_for('main.admin_dashboard')) 
@@ -231,6 +231,7 @@ def register_student():
         admission_number = request.form['admission_number']
         current_year = request.form['current_year']
         year_intake = request.form['year_intake']
+        international = request.form['international']
         academic_status = request.form['academic_status']
 
         try:
@@ -243,7 +244,7 @@ def register_student():
             # Save student record
             Student.create_student(
                 user_id, school, course, admission_number, current_year,
-                formatted_year_intake, academic_status, db_connection
+                formatted_year_intake, international, academic_status, db_connection
             )
             flash('Student registration successful!', 'success')
             print('Student registration successful!')
@@ -520,6 +521,40 @@ def fadmindashboard():
     
     return render_template('FacultyAdmin/FAdminDashboard.html', fadmin=fadmin_details)
 
+@main.route('/famanagecourse', methods=['GET', 'POST'])
+@login_required
+@role_required('4')
+def famanagecourse():
+    return render_template('FacultyAdmin/FAdminManageCourse.html')
+
+@main.route('/faunitdashboard', methods=['GET', 'POST'])
+@login_required
+@role_required('4')
+def faunitdashboard():
+    return render_template('FacultyAdmin/UnitDashboard.html')
+
+@main.route('/faviewcourse', methods = ['GET', 'POST'])
+@login_required
+@role_required('4')
+def faviewcourse():
+    return render_template('FacultyAdmin/ViewCourseUnits.html')
+
+@main.route('/bbitunits', methods=['GET', 'POST'])
+@login_required
+@role_required('4')
+def bbitunits():
+    db = get_db_connection()
+    bbit_units = Unit.get_bbit_units(db)
+    return render_template('FacultyAdmin/BBIT.html', units=bbit_units)
+
+@main.route('/compsciunits', methods=['GET', 'POST'])
+@login_required
+@role_required('4')
+def compsciunits():
+    db = get_db_connection()
+    compsci_units = Unit.get_compsci_units(db)
+    return render_template('FacultyAdmin/ComputerScience.html', units=compsci_units)
+
 @main.route('/viewusers')
 @login_required
 @role_required('0')
@@ -535,6 +570,12 @@ def viewstudents():
     # Fetch all student records
     student_list = Student.get_all_students(db)
     return render_template('/AdminModule/ViewStudents.html', students=student_list)
+
+@main.route('/lecregunits')
+@login_required
+@role_required('2')
+def lecregunits():
+    return render_template('LecturerModule/RegisterUnits.html')
 
 @main.route('/viewlecturers')
 @login_required
@@ -556,6 +597,34 @@ def viewunits():
     units = Unit.get_all_units(db)
     return render_template('/AdminModule/ViewUnits.html', units=units)
 
+@main.route('/post_unit/<int:unit_id>', methods=['POST'])
+@login_required
+@role_required('4') 
+def post_unit(unit_id):
+    db = get_db_connection()
+    try:
+        # Update the status in the database
+        cursor = db.cursor()
+        cursor.execute("UPDATE units SET status = %s WHERE id = %s", ('Active', unit_id))
+        db.commit()
+        print(f"Unit {unit_id} posted successfully.")
+        flash('Unit posted successfully.', 'success')
+    except Exception as e:
+        db.rollback()
+        flash(f'Error posting unit: {str(e)}', 'error')
+        print(f'Error posting unit: {str(e)}')  
+    finally:
+        cursor.close()
+    
+    return redirect(url_for('main.fadmindashboard'))
+
+@main.route('/OngoingUnits')
+@login_required
+@role_required('4')
+def OngoingUnits():
+
+    return render_template('FacultyAdmin/OngoingUnits.html')
+
 @main.route('/success')
 def success_page():
     return render_template('Message.html')
@@ -565,5 +634,5 @@ def success_page():
 def logout():
     logout_user()  # Logs out the current user
     return redirect(url_for('main.login_page'))  # Redirect to login page
-
+ 
 

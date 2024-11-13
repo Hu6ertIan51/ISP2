@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS student_details (
     admission_number CHAR(7) UNIQUE NOT NULL,
     current_year INT NOT NULL,
     year_intake VARCHAR(20) NOT NULL,
+    international VARCHAR(50) NOT NULL,
     academic_status VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
@@ -41,7 +42,8 @@ CREATE TABLE IF NOT EXISTS units (
     school VARCHAR(255) NOT NULL,
     course VARCHAR(255) NOT NULL,
     year_offered INT NOT NULL,  
-    semester_offered INT NOT NULL,                       
+    semester_offered INT NOT NULL,  
+    status VARCHAR(50) NOT NULL,                    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
