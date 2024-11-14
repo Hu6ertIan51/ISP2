@@ -153,18 +153,20 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                {% for unit in units %}
                                 <tr>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>           
+                                    <td>{{ unit.unit_name }}</td>
+                                    <td>{{ unit.unit_code }}</td>
+                                    <td>{{ unit.course }}</td>
+                                    <td>{{ unit.year_offered }}</td>
+                                    <td>{{ unit.semester_offered }}</td>  
                                     <td>
                                         <button type="button" class="add-unit-btn" onclick="openModal()">
                                             <i class="fa-solid fa-plus"></i> Register Unit
                                         </button>
                                     </td>
                                 </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div> 
@@ -174,29 +176,29 @@
                 <div class="modal-content">
                     <span class="close" onclick="closeModal()">&times;</span>
                     <h3>Register for Unit</h3>
-                    <form action="{{ url_for('main.register_student_unit')}}" method="POST">
+                    <form action="{{ url_for('main.register_student_unit') }}" method="POST">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="course_name" value="{{ course_name }}">
-
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="student_id" value="{{student.user_id}}">
                         <div>
                             <label for="student_id">Admission Number:</label>
-                            <input type="text" id="student_id" name="admission_number" value="" readonly>
+                            <input type="text" id="student_id" name="admission_number" value="{{student.admission_number}}" readonly>
                         </div>
                         
                         <div>
                             <label for="unit_name">Unit Name:</label>
-                            <input type="text" id="unit_name" name="unit_name" readonly>
+                            <input type="text" id="unit_name" name="unit_name" value="{{ units.unit_name }}" readonly>
                         </div>
                         
                         <div>
                             <label for="unit_code">Unit Code:</label>
-                            <input type="text" id="unit_code" name="unit_code" readonly>
+                            <input type="text" id="unit_code" name="unit_code" value="{{units.unit_code}}" readonly>
                         </div>
-                        
+                
                         <button type="submit">Submit</button>
                     </form>
                 </div>
-            </div>
+            </div>            
             <footer>
                 <p>&copy; 2024</p>
             </footer>

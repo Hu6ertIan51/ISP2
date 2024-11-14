@@ -68,3 +68,13 @@ CREATE TABLE IF NOT EXISTS faculty_admin (
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );  
 
+CREATE TABLE IF NOT EXISTS student_unit_registrations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,  
+    unit_id INT NOT NULL,
+    registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES student_details(id) ON DELETE CASCADE,
+    FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE
+);
+
+

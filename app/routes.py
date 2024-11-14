@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from .models import User, Student, Lecturer, Unit, SystemAdmin, FacultyAdmin
-from .db import get_db_connection
+from .db import get_db_connection, fetch_one, fetch_all
 from functools import wraps
 from datetime import datetime
 
@@ -395,20 +395,59 @@ def student_dashboard():
 
     return render_template('StudentModule/StudentDashboard.html', student=student_details)
 
-@main.route('/register_student_unit', methods=['GET', 'POST']) 
+@main.route('/register_student_unit', methods=['GET', 'POST'])
 @login_required
-@role_required('1') 
 def register_student_unit():
+    db = get_db_connection()
 
-    return render_template('StudentModule/UnitRegistration.html')
+    if request.method == 'POST':
+        # Handle form submission
+        admission_number = request.form.get('admission_number')
+        unit_code = request.form.get('unit_code')
+
+        # Call the register_student_unit method from the Student model to register the unit
+        registration_successful = Student.register_student_unit(admission_number, unit_code, db)
+
+        if registration_successful:
+            flash("Successfully registered for the unit.", "success")
+            print("Successfully registered for the unit.")
+        else:
+            flash("Error: Invalid admission number or unit code.", "error")
+            print("Error: Invalid admission number or unit code.")
+
+        # Redirect to a relevant page after successful registration (e.g., available units)
+        return redirect(url_for('main.available_units'))
+
+    # For GET request, fetch the student's details and available units
+    user_id = current_user.id  # Get the current user's ID from Flask-Login
+    student = Student.find_by_user_id(user_id, db)
+
+    if not student:
+        flash("No student details found.", "error")
+        return redirect(url_for('main.index'))  # Redirect to the index page if no student is found
+
+    # Fetch available units from the database (unit_code and unit_name)
+    units_query = "SELECT unit_code, unit_name FROM units"
+    units = fetch_all(db, units_query)
+
+    # Render the template and pass the student and units data
+    return render_template('register_student_unit.html', student=student, units=units)
+
 
 @main.route('/available_units', methods=['GET', 'POST'])
 @login_required
 @role_required('1')
 def available_units():
     db = get_db_connection()
-    units = Unit.get_active_units(db)
-    return render_template('StudentModule/UnitRegistration.html', units=units)
+    # Fetch all available units
+    units = Unit.get_units_for_user(db, user_id=current_user.id)
+
+   # Fetch the student details based on the current user
+    student = Student.find_by_student_id(db, current_user.id)
+    
+
+    return render_template('StudentModule/UnitRegistration.html', units=units, student=student)
+
 
 @main.route('/register_lecturer', methods=['GET', 'POST'])
 @login_required

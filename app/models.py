@@ -173,6 +173,32 @@ class Student:
         return None
     
     @staticmethod
+    def find_by_student_id(db, user_id):
+        """Query student details by user ID, including the student's name."""
+        query = """
+        SELECT u.full_name, sd.user_id, sd.school, sd.course, sd.admission_number, sd.current_year, u.mobile_number, u.email, sd.year_intake, sd.international, sd.academic_status
+        FROM student_details sd
+        JOIN users u ON sd.user_id = u.id
+        WHERE sd.user_id = %s
+        """
+        result = fetch_one(db, query, (user_id,))
+        if result:
+            return Student(
+                user_id=result['user_id'],
+                school=result['school'],
+                course=result['course'],
+                admission_number=result['admission_number'],
+                full_name=result['full_name'],
+                current_year=result['current_year'],
+                mobile_number=result['mobile_number'],
+                email=result['email'],
+                year_intake=result['year_intake'],
+                international=result['international'],
+                academic_status=result['academic_status']
+            )
+        return None
+
+    @staticmethod
     def get_all_students(db):
         """Fetch all student details along with user info."""
         query = """
@@ -200,7 +226,32 @@ class Student:
             students.append(student)
         
         return students
+    
+    @staticmethod
+    def register_student_unit(admission_number, unit_code, db):
+        """Register a student for a unit."""
+        # Fetch student_id based on admission_number
+        student_query = "SELECT id FROM student_details WHERE admission_number = %s"
+        student_result = fetch_one(db, student_query, (admission_number,))
+        student_id = student_result['id'] if student_result else None
 
+        # Fetch unit_id based on unit_code
+        unit_query = "SELECT id FROM units WHERE unit_code = %s"
+        unit_result = fetch_one(db, unit_query, (unit_code,))
+        unit_id = unit_result['id'] if unit_result else None
+
+        if student_id and unit_id:
+            # Insert into student_unit_registrations
+            register_query = """
+            INSERT INTO student_unit_registrations (student_id, unit_id)
+            VALUES (%s, %s)
+            """
+            execute_query(db, register_query, (student_id, unit_id))
+            return True  # Registration successful
+        else:
+            return False  # Error: Invalid admission number or unit code
+        
+    
 class Lecturer:
     def __init__(self, user_id, school, lecturer_number, year_intake, lecturer_status, full_name=None, mobile_number=None, email=None):
         self.user_id = user_id
@@ -445,8 +496,45 @@ class Unit:
     
         return units
     
-    
-    
+   
+    @staticmethod
+    def get_units_for_user(db, user_id, status="Active"):
+        """
+        Fetch all active units for the course associated with the given user ID.
+        """
+        # First, retrieve the user's course
+        course_query = "SELECT course FROM student_details WHERE user_id = %s"
+        course_result = fetch_one(db, course_query, (user_id,))
+        user_course = course_result['course'] if course_result else None
+
+        # If no course is found, return an empty list
+        if not user_course:
+            return []
+
+        # Now fetch the units based on the user's course and status
+        units_query = """
+        SELECT id, unit_name, unit_code, school, course, year_offered, semester_offered, status
+        FROM units
+        WHERE status = %s AND course = %s
+        """
+        units_params = (status, user_course)
+        results = fetch_all(db, units_query, units_params)
+
+        # Process and return units
+        units = [
+            Unit(
+                id=result['id'],
+                unit_name=result['unit_name'],
+                unit_code=result['unit_code'],
+                school=result['school'],
+                course=result['course'],
+                year_offered=result['year_offered'],
+                semester_offered=result['semester_offered'],
+                status=result['status']
+            )
+            for result in results
+        ]
+        return units
 
 class FacultyAdmin:
     def __init__(self, user_id, school, faculty, faculty_number, faculty_status, full_name=None, mobile_number=None, email=None):
