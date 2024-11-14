@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSense Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://kit.fontawesome.com/aa11ee7bbf.js" crossorigin="anonymous"></script>
+    <style>
+        /* Button Styles */
+        .add-unit-btn {
+            display: inline-flex;
+            align-items: center;
+            background-color: #6F251B;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-unit-btn i {
+            margin-right: 5px;
+        }
+
+        .add-unit-btn:hover {
+            background-color: #3E4961;
+        }
+
+        /* Modal Content */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-content input[type="text"],
+        .modal-content select {
+            width: 100%;
+            padding: 10px 0;
+            margin: 15px 0;
+            border: none;
+            border-bottom: 2px solid #ccc;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .modal-content input:focus,
+        .modal-content select:focus {
+            border-bottom: 2px solid #2C2C2C;
+        }
+
+        .modal-content button {
+            width: 100%;
+            padding: 15px;
+            background-color: #293040;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* Close button for modal */
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="icon-container">     
+        <form action="{{ url_for('main.logout') }}" method="POST" id="logout-form" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="button" class="logout-btn" onclick="confirmLogout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+            </button>
+        </form>
+        
+        <script>
+            function confirmLogout() {
+                if (confirm("Are you sure you want to log out?")) {
+                    document.getElementById("logout-form").submit();
+                }
+            }
+        </script>        
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <h2>EduSense</h2>
+            <p>Student Navigation Panel</p>
+            <ul>
+                <li><i class="fa-solid fa-house" style="color: #6F251B;" class = "active"></i>
+                    <a href="{{ url_for('main.student_dashboard') }}">Dashboard</a></li>
+                <li><i class="fa-brands fa-flipboard" style="color:#6F251B;"></i></i>    
+                    <a href="{{ url_for('main.available_units') }}">Unit Registration</a></li>    
+                <li><i class="fa-solid fa-clipboard" style="color:#6F251B;"></i>
+                    <a href="">Attendance Records</a></li>
+                <li><i class="fa-solid fa-book" style="color:#6F251B;"></i>
+                    <a href="">Grades</a></li>
+                <li><i class="fa-solid fa-money-bill" style="color:#6F251B;"></i>
+                    <a href="">Fee Balance</a></li>
+                <li><i class="fa-solid fa-person" style="color:#6F251B;"></i>
+                    <a href="">Mentor Information</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="spaceforbanner">
+                <h2>Unit Registration</h2>
+            </div>
+            <div class="personal-info">
+                <h2>Available Units</h2>
+                <div class="profile-info">
+                    <div class="user-info">
+                        <table id="studentTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">Unit Name</th>
+                                    <th>Unit Code</th>
+                                    <th>Course</th>
+                                    <th>Year Offered</th>
+                                    <th>Semester offered</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>           
+                                    <td>
+                                        <button type="button" class="add-unit-btn" onclick="openModal()">
+                                            <i class="fa-solid fa-plus"></i> Register Unit
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div> 
+                </div>
+            </div>
+            <div id="registerModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeModal()">&times;</span>
+                    <h3>Register for Unit</h3>
+                    <form action="{{ url_for('main.register_student_unit')}}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="course_name" value="{{ course_name }}">
+
+                        <div>
+                            <label for="student_id">Admission Number:</label>
+                            <input type="text" id="student_id" name="admission_number" value="" readonly>
+                        </div>
+                        
+                        <div>
+                            <label for="unit_name">Unit Name:</label>
+                            <input type="text" id="unit_name" name="unit_name" readonly>
+                        </div>
+                        
+                        <div>
+                            <label for="unit_code">Unit Code:</label>
+                            <input type="text" id="unit_code" name="unit_code" readonly>
+                        </div>
+                        
+                        <button type="submit">Submit</button>
+                    </form>
+                </div>
+            </div>
+            <footer>
+                <p>&copy; 2024</p>
+            </footer>
+        </div>
+    </div>
+    <script>
+        // Open modal
+        function openModal() {
+            document.getElementById("registerModal").style.display = "flex";
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById("registerModal").style.display = "none";
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            let modal = document.getElementById("registerModal");
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

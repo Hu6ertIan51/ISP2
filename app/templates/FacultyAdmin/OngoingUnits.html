@@ -94,13 +94,23 @@
                                         <td>{{ unit.year_offered }}</td>
                                         <td>{{ unit.semester_offered }}</td>
                                         <td>
-                                            <form action="" method="POST" style="display:inline;">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="add-unit-btn" title="Unpost Unit">
-                                                    <i class="fa-solid fa-minus"></i> Unpost Unit
-                                                </button>
-                                            </form>
+                                            {% if unit.status == 'Active' %}
+                                                <form action="{{ url_for('main.unpost_unit', unit_id=unit.id) }}" method="POST" style="display:inline;">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="add-unit-btn" title="Unpost Unit">
+                                                        <i class="fa-solid fa-minus"></i> Unpost Unit
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <form action="{{ url_for('main.post_unit', unit_id=unit.id) }}" method="POST" style="display:inline;">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="add-unit-btn" title="Post Unit">
+                                                        <i class="fa-solid fa-plus"></i> Post Unit
+                                                    </button>
+                                                </form>
+                                            {% endif %}
                                         </td>
+                                        
                                     </tr>
                                 {% endfor %} 
                             </tbody>

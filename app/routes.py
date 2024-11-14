@@ -395,6 +395,21 @@ def student_dashboard():
 
     return render_template('StudentModule/StudentDashboard.html', student=student_details)
 
+@main.route('/register_student_unit', methods=['GET', 'POST']) 
+@login_required
+@role_required('1') 
+def register_student_unit():
+
+    return render_template('StudentModule/UnitRegistration.html')
+
+@main.route('/available_units', methods=['GET', 'POST'])
+@login_required
+@role_required('1')
+def available_units():
+    db = get_db_connection()
+    units = Unit.get_active_units(db)
+    return render_template('StudentModule/UnitRegistration.html', units=units)
+
 @main.route('/register_lecturer', methods=['GET', 'POST'])
 @login_required
 @role_required('0')
@@ -614,6 +629,26 @@ def post_unit(unit_id):
         cursor.close()
 
     return redirect(url_for('main.fadmindashboard'))  # Make sure to redirect to reload the page
+
+@main.route('/unpost_unit/<int:unit_id>', methods=['POST'])
+@login_required
+@role_required('4')
+def unpost_unit(unit_id):
+    db = get_db_connection()
+    try:
+        cursor = db.cursor()
+        cursor.execute("UPDATE units SET status = %s WHERE id = %s", ('Inactive', unit_id))
+        db.commit()
+        flash('Unit unposted successfully.', 'success')
+        print('Unit unposted successfully.')
+    except Exception as e:
+        db.rollback()
+        flash(f'Error unposting unit: {str(e)}', 'error')
+        print(f'Error unposting unit: {str(e)}')
+    finally:
+        cursor.close()
+
+    return redirect(url_for('main.fadmindashboard'))
 
 @main.route('/OngoingUnits')
 @login_required
