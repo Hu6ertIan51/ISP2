@@ -242,7 +242,7 @@ class Student:
         """Fetch all student details along with user info."""
         query = """
         SELECT u.full_name, sd.user_id, sd.school, sd.course, sd.admission_number, sd.current_year, 
-            u.mobile_number, u.email, sd.year_intake, sd.academic_status
+            u.mobile_number, u.email, sd.year_intake, sd.academic_status, sd.international
         FROM student_details sd
         JOIN users u ON sd.user_id = u.id
         """
@@ -252,6 +252,9 @@ class Student:
             # Convert the academic_status from 0/1 to 'active'/'inactive'
             academic_status = 'Inactive' if result['academic_status'] == 1 else 'Active'
             
+            # Convert the international column (0 or 1) to 'Domestic Residency' or 'International Residency'
+            residency_status = 'International Residency' if result['international'] == 1 else 'Domestic Residency'
+            
             student = Student(
                 user_id=result['user_id'],
                 school=result['school'],
@@ -260,12 +263,13 @@ class Student:
                 full_name=result['full_name'],
                 current_year=result['current_year'],
                 year_intake=result['year_intake'],
+                international=residency_status,  # Set the converted residency status
                 academic_status=academic_status  # Store 'active' or 'inactive'
             )
             students.append(student)
         
         return students
-    
+
     @staticmethod
     def register_student_unit(admission_number, unit_code, db):
         """Register a student for a unit."""
@@ -437,7 +441,7 @@ class Unit:
     def get_all_units(db):
         """Fetch all units from the database."""
         query = """
-        SELECT unit_name, unit_code, school, course, year_offered, semester_offered, status
+        SELECT id, unit_name, unit_code, school, course, year_offered, semester_offered, status
         FROM units
         """
         results = fetch_all(db, query)
@@ -447,6 +451,7 @@ class Unit:
             status = "Active" if result['status'] == 0 else "Inactive"
             
             unit = Unit(
+                id=result['id'],
                 unit_name=result['unit_name'],
                 unit_code=result['unit_code'],
                 school=result['school'],
@@ -488,7 +493,7 @@ class Unit:
     def get_compsci_units(db):
         """Fetch all units for the Computer Science course from the database."""
         query = """
-        SELECT unit_name, unit_code, school, course, year_offered, semester_offered
+        SELECT id, unit_name, unit_code, school, course, year_offered, semester_offered, status
         FROM units
         WHERE course = %s
         """
@@ -498,12 +503,14 @@ class Unit:
         units = []
         for result in results:
             unit = Unit(
+                id=result['id'],
                 unit_name=result['unit_name'],
                 unit_code=result['unit_code'],
                 school=result['school'],
                 course=result['course'],
                 year_offered=result['year_offered'],
-                semester_offered=result['semester_offered']
+                semester_offered=result['semester_offered'],
+                status=result['status']
             )
             units.append(unit)
         return units

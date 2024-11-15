@@ -58,6 +58,7 @@
                                         <th>Course</th>
                                         <th>Current Year</th>
                                         <th>Year Intake</th>
+                                        <th>Residency</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -71,6 +72,7 @@
                                             <td>{{ student.course }}</td>
                                             <td>{{ student.current_year }}</td>
                                             <td>{{ student.year_intake }}</td>
+                                            <td>{{ student.international }}</td>    
                                             <td>{{ student.academic_status }}</td>
                                         </tr>
                                         {% endfor %}
