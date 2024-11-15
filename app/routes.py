@@ -397,6 +397,7 @@ def student_dashboard():
 
 @main.route('/register_student_unit', methods=['GET', 'POST'])
 @login_required
+@role_required('1')  # Student role
 def register_student_unit():
     db = get_db_connection()
 
@@ -439,19 +440,87 @@ def register_student_unit():
 @role_required('1')
 def available_units():
     db = get_db_connection()
-    # Fetch all available units
-    units = Unit.get_units_for_user(db, user_id=current_user.id)
-
-   # Fetch the student details based on the current user
-    student = Student.find_by_student_id(db, current_user.id)
     
+    # Handle POST request for unit registration
+    if request.method == 'POST':
+        student_id = request.form.get('student_id')
+        unit_id = request.form.get('unit_id')
+        admission_number = request.form.get('admission_number')
+        unit_name = request.form.get('unit_name')
+        unit_code = request.form.get('unit_code')
+        registration_status = request.form.get('registration_status')
+        
+        
+        # Fetch the correct student_id if not directly provided
+        cursor = db.cursor()
+        cursor.execute("SELECT id FROM student_details WHERE user_id = %s", (current_user.id,))
+        result = cursor.fetchone()
+        if result:
+            student_id = result[0]
+        else:
+            flash('Student details not found. Please contact support.', 'error')
+            return redirect(url_for('main.available_units'))
+        
+        # Validate input
+        if not (student_id and unit_id and admission_number and unit_name and unit_code):
+            flash('All fields are required.', 'error')
+            return redirect(url_for('main.available_units'))
+        
+        # Check if the student has already registered for this unit
+        cursor.execute("""
+            SELECT id FROM student_unit_registrations 
+            WHERE student_id = %s AND unit_id = %s
+        """, (student_id, unit_id))
+        existing_registration = cursor.fetchone()
+        
+        if existing_registration:
+            flash('You have already registered for this unit.', 'error')
+            return redirect(url_for('main.available_units'))
+        
+        try:
+            # Insert registration details into the database
+            cursor.execute("""
+                INSERT INTO student_unit_registrations (student_id, unit_id, admission_number, unit_name, unit_code, registration_status)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (student_id, unit_id, admission_number, unit_name, unit_code, registration_status))
+            db.commit()
+            flash('Unit registered successfully!', 'success')
+        except Exception as e:
+            db.rollback()
+            flash(f'Error registering unit: {str(e)}', 'error')
+        finally:
+            cursor.close()
+    
+    # Fetch student details and active units for GET requests
+    student = Student.find_by_student_id(db, current_user.id)
+    units = Student.get_units_for_student(db, current_user.id)
+    
+    return render_template('StudentModule/UnitRegistration.html', student=student, units=units) 
 
-    return render_template('StudentModule/UnitRegistration.html', units=units, student=student)
+@main.route('/inprogressunits', methods=['GET', 'POST'])
+@login_required
+@role_required('1')  # Ensure the user is a student
+def inprogressunits():
+    db = get_db_connection()
+    try:
+        # Fetch the student details for the logged-in user
+        student = Student.find_by_user_id(current_user.id, db)
+        if not student:
+            flash("Student record not found.", 'error')
+            return redirect(url_for('main.student_dashboard'))
+
+        # Fetch the registered units using the student's admission_number
+        units = Unit.fetch_registered_units(student.admission_number, db)
+        return render_template('StudentModule/InProgressUnits.html', units=units)
+    except Exception as e:
+        flash(f"Error fetching units: {str(e)}", 'error')
+        print(f"Error fetching units: {str(e)}")
+        return redirect(url_for('main.student_dashboard'))
 
 
 @main.route('/register_lecturer', methods=['GET', 'POST'])
 @login_required
-@role_required('0')
+@role_required('0') 
 def register_lecturer():
     db_connection = get_db_connection()
 

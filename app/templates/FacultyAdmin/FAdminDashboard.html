@@ -6,6 +6,43 @@
     <title>EduSense Admin Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://kit.fontawesome.com/aa11ee7bbf.js" crossorigin="anonymous"></script>
+
+    <style>
+        .flash {
+            width: 50%;
+            padding: 10px;
+            margin: 20px 0 10px 0; /* Add margin to the top and bottom to give space around the flash message */
+            border-radius: 5px;
+            font-size: 16px;
+            z-index: 10; /* Ensure it stays on top */
+            position: relative; /* Allow proper stacking in the layout */
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .flash.success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .flash.error {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .flash.warning {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .flash-messages {
+            margin-top: 20px; /* Add margin to the top of the flash messages container */
+        }
+
+        .main-content {
+        padding-top: 20px; /* Add space at the top to prevent content from overlapping with flash messages */
+        }
+
+    </style>
 </head>
 <body>
     <div class="icon-container">
@@ -45,6 +82,16 @@
             </ul>
         </div>
         <div class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
                 <h1>Welcome, {{fadmin.full_name}}</h1>
                 <div class="personal-info">
                     <h2>Faculty Admin Information</h2>

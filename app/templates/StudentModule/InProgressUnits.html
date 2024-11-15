@@ -129,7 +129,36 @@
         padding-top: 20px; /* Add space at the top to prevent content from overlapping with flash messages */
         }
 
+        .view-attendance-btn,
+        .view-grades-btn {
+            width: 100px;
+            margin-bottom: 10px; /* Add space between the buttons */
+            padding: 10px 20px; /* Add padding to make buttons larger */
+            font-size: 14px; /* Adjust text size */
+            border: none; /* Remove default border */
+            border-radius: 5px; /* Round the corners */
+            cursor: pointer; /* Change cursor on hover */
+            display: inline-block; /* Ensure buttons stay inline */
+        }
 
+        .view-attendance-btn {
+            background-color: #6F251B; /* Green background for Attendance */
+            color: white; /* White text */
+        }
+
+        .view-grades-btn {
+            background-color: #6F251B; /* Blue background for Grades */
+            color: white; /* White text */
+        }
+
+        /* Optional: Add hover effects for buttons */
+        .view-attendance-btn:hover {
+            background-color: #1f293e; /* Darker green when hovered */
+        }
+
+        .view-grades-btn:hover {
+            background-color: #1f293e; /* Darker blue when hovered */
+        }
     </style>
 </head>
 <body>
@@ -177,72 +206,73 @@
                 {% endif %}
             {% endwith %}
             <div class="spaceforbanner">
-                <h2>Unit Registration</h2>
+                <h2>Course Information</h2>
             </div>
             <div class="personal-info">
-                <h2>Available Units</h2>
+                <h2>Ongoing/Past Units</h2>
                 <div class="profile-info">
                     <div class="user-info">
                         <table id="studentTable">
                             <thead>
                                 <tr>
-                                    <th style="width: 20%;">Unit Name</th>
+                                    <th style="width: 29%;">Unit Name</th>
                                     <th>Unit Code</th>
                                     <th>Course</th>
                                     <th>Year Offered</th>
                                     <th>Semester Offered</th>
-                                    <th>Actions</th>
+                                    <th style="width: 20%;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for unit in units %}
-                                <tr>
-                                    <td>{{ unit.unit_name }}</td>
-                                    <td>{{ unit.unit_code }}</td>
-                                    <td>{{ unit.course }}</td>
-                                    <td>{{ unit.year_offered }}</td>
-                                    <td>{{ unit.semester_offered }}</td>
-                                    <td>
-                                        {% if unit.registration_status == '1' %}
-                                            <button type="button" class="add-unit-btn" disabled>
-                                                <i class="fa-solid fa-check"></i> Registered
+                                    <tr>
+                                        <td>{{ unit.unit_name }}</td>
+                                        <td>{{ unit.unit_code }}</td>
+                                        <td>{{ unit.course }}</td>
+                                        <td>{{ unit.year_offered }}</td>
+                                        <td>{{ unit.semester_offered }}</td>
+                                        <td>
+                                            <button type="button" class="view-grades-btn" onclick="openModal()">
+                                                <i class="fa-solid fa-book" style="color:#ccc;"></i> Grades
                                             </button>
-                                        {% else %}
-                                            <button type="button" class="add-unit-btn" onclick="openModal('{{ unit.id }}')">
-                                                <i class="fa-solid fa-plus"></i> Register Unit
+                                            <button type="button" class="view-attendance-btn" onclick="openModal()">
+                                                <i class="fa-solid fa-book" style="color:#ccc;"></i> Attendance
                                             </button>
-                                        {% endif %}
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6">No units in progress.</td>
+                                    </tr>
                                 {% endfor %}
-                            </tbody>                                         
+                            </tbody>
                         </table>
                     </div> 
                 </div>
             </div>
-            {% for unit in units %}
-                <div id="registerModal_{{ unit.id }}" class="modal">
+
+                <div id="" class="modal">
                     <div class="modal-content">
-                        <span class="close" onclick="closeModal('{{ unit.id }}')">&times;</span>
+                        <span class="close" onclick="closeModal()">&times;</span>
                         <h3>Register for Unit</h3>
-                        <form action="{{ url_for('main.available_units') }}" method="POST">
+                        <form action="" method="POST">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="student_id" value="{{ student.user_id }}">
-                            <input type="hidden" name="unit_id" value="{{ unit.id }}">
+                            <input type="hidden" name="student_id" value="">
+                            <input type="hidden" name="unit_id" value="">
 
                             <div>
                                 <label for="admission_number">Admission Number:</label>
-                                <input type="text" id="admission_number" name="admission_number" value="{{ student.admission_number }}" readonly>
+                                <input type="text" id="admission_number" name="admission_number" value="" readonly>
                             </div>
                             
                             <div>
                                 <label for="unit_name">Unit Name:</label>
-                                <input type="text" id="unit_name" name="unit_name" value="{{ unit.unit_name }}" readonly>
+                                <input type="text" id="unit_name" name="unit_name" value="" readonly>
                             </div>
                             
                             <div>
                                 <label for="unit_code">Unit Code:</label>
-                                <input type="text" id="unit_code" name="unit_code" value="{{ unit.unit_code }}" readonly>
+                                <input type="text" id="unit_code" name="unit_code" value="" readonly>
                             </div>
                             
                             <div>
@@ -257,34 +287,10 @@
                         </form>
                     </div>
                 </div>
-            {% endfor %}
             <footer>
                 <p>&copy; 2024</p>
             </footer>
         </div>
     </div>
-    <script>
-        // Open modal
-        function openModal(unitId) {
-            document.getElementById(`registerModal_${unitId}`).style.display = "flex";
-            modal.style.display = "flex";
-            modal.classList.add('fade-in');
-        }
-
-        // Close modal
-        function closeModal(unitId) {
-            document.getElementById(`registerModal_${unitId}`).style.display = "none";
-        }
-
-        // Close modal when clicking outside of it
-        window.onclick = function(event) {
-            const modals = document.getElementsByClassName("modal");
-            for (let modal of modals) {
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                }
-            }
-        };
-    </script>
 </body>
 </html>

@@ -72,6 +72,10 @@ CREATE TABLE IF NOT EXISTS student_unit_registrations (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,  
     unit_id INT NOT NULL,
+    admission_number VARCHAR(30) NOT NULL,
+    unit_name VARCHAR(255) NOT NULL,    
+    unit_code VARCHAR(20) NOT NULL,
+    registration_status VARCHAR(50) NOT NULL, 
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES student_details(id) ON DELETE CASCADE,
     FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE
