@@ -293,7 +293,7 @@ class Student:
             return True  # Registration successful
         else:
             return False  # Error: Invalid admission number or unit code
-            
+        
     
 class Lecturer:
     def __init__(self, user_id, school, lecturer_number, year_intake, lecturer_status, full_name=None, mobile_number=None, email=None):
@@ -543,17 +543,70 @@ class Unit:
         return units
 
     @staticmethod
-    def fetch_registered_units(admission_number, db):
-        """Fetch all units registered by a student."""
-        query = """
-        SELECT u.id, u.unit_name, u.unit_code, u.school, u.course, u.year_offered, u.semester_offered, u.status
-        FROM student_details s
-        JOIN student_unit_registrations sur ON s.id = sur.student_id
-        JOIN units u ON sur.unit_id = u.id
-        WHERE s.admission_number = %s
+    def fetch_registered_units_for_lecturer(lecturer_id, db):
         """
-        results = fetch_all(db, query, (admission_number,))
+        Fetch all units registered by a lecturer.
+
+        Args:
+            lecturer_id (int): ID of the lecturer.
+            db (DatabaseConnection): Database connection object.
+
+        Returns:
+            list[dict]: List of dictionaries containing unit details.
+        """
+        query = """
+        SELECT u.id AS unit_id, u.unit_name, u.unit_code, u.school, u.course, 
+            u.year_offered, u.semester_offered, u.status
+        FROM lecturer_unit_registrations lur
+        JOIN units u ON lur.unit_id = u.id
+        WHERE lur.lecturer_id = %s
+        """
+        results = fetch_all(db, query, (lecturer_id,))
+        return results
+
+ 
+    
+    @staticmethod
+    def register_unit_for_lecturer(lecturer_id, unit_id, db):
+        # Validate the unit_id exists in the units table
+        validate_query = "SELECT 1 FROM units WHERE id = %s"
+        if not fetch_one(db, validate_query, (unit_id,)):
+            raise ValueError(f"Invalid unit_id: {unit_id}")
+        
+        # Check if the lecturer is already registered
+        check_query = """
+        SELECT 1
+        FROM lecturer_unit_registrations
+        WHERE lecturer_id = %s AND unit_id = %s
+        """
+        if fetch_one(db, check_query, (lecturer_id, unit_id)):
+            return False
+        
+        # Register the unit
+        insert_query = """
+        INSERT INTO lecturer_unit_registrations (lecturer_id, unit_id)
+        VALUES (%s, %s)
+        """
+        execute_query(db, insert_query, (lecturer_id, unit_id))
+        return True
+
+    
+    @staticmethod
+    def get_sces_units_with_registration_status(lecturer_id, db):
+        query = """
+        SELECT u.id, u.unit_name, u.unit_code, u.school, u.course, u.year_offered, 
+            u.semester_offered, 
+            EXISTS (
+                SELECT 1 
+                FROM lecturer_unit_registrations 
+                WHERE lecturer_id = %s AND unit_id = u.id
+            ) AS registered
+        FROM units u
+        WHERE u.school = 'SCES'
+        """
+        results = fetch_all(db, query, (lecturer_id,))
         units = []
+
         for result in results:
             unit = Unit(
                 id=result['id'],
@@ -563,9 +616,10 @@ class Unit:
                 course=result['course'],
                 year_offered=result['year_offered'],
                 semester_offered=result['semester_offered'],
-                status=result['status']
+                status="Registered" if result['registered'] else "Not Registered"
             )
             units.append(unit)
+
         return units
 
 

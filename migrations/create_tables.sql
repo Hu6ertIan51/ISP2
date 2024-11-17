@@ -81,4 +81,13 @@ CREATE TABLE IF NOT EXISTS student_unit_registrations (
     FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS lecturer_unit_registrations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    lecturer_id INT NOT NULL,
+    unit_id INT NOT NULL,
+    registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (lecturer_id) REFERENCES users(id),
+    FOREIGN KEY (unit_id) REFERENCES units(id)
+);
+
 

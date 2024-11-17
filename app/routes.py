@@ -696,9 +696,54 @@ def viewstudents():
 
 @main.route('/lecregunits')
 @login_required
-@role_required('2')
+@role_required('2')  # Lecturer role
 def lecregunits():
-    return render_template('LecturerModule/RegisterUnits.html')
+    db = get_db_connection()  # Function to connect to the database
+    lecturer_id = current_user.id  # Get the current lecturer's ID
+
+    # Fetch all units and mark those already registered
+    units = Unit.get_sces_units_with_registration_status(lecturer_id, db)
+    return render_template('LecturerModule/RegisterUnits.html', units=units)
+
+
+@main.route('/unit_enrollment', methods=['POST'])
+@login_required
+@role_required('2')  # Lecturer role
+def unit_enrollment():
+    db = get_db_connection()
+    lecturer_id = request.form.get('lecturer_id')
+    unit_id = request.form.get('unit_id')
+
+    try:
+        # Try registering the unit for the lecturer
+        if Unit.register_unit_for_lecturer(lecturer_id, unit_id, db):
+            flash('Unit successfully registered!', 'success')
+        else:
+            flash('You are already registered for this unit.', 'warning')
+
+    except Exception as e:
+        flash(f'An error occurred: {str(e)}', 'error')
+
+    return redirect(url_for('main.lecregunits'))
+ 
+@main.route('/inprogressunitslec', methods=['GET'])
+@login_required 
+@role_required('2')  # Lecturer role
+def inprogressunitslec():
+    lecturer_id = current_user.id
+    db = get_db_connection()  # Replace with your actual database connection method
+    
+    # Fetch registered units for the lecturer
+    try:
+        units = Unit.fetch_registered_units_for_lecturer(lecturer_id, db)
+    except Exception as e:
+        flash(f"An error occurred while fetching units: {str(e)}", "error")
+        units = []
+
+    return render_template(
+        'LecturerModule/InProgressUnits.html',
+        units=units
+    )
 
 @main.route('/viewlecturers')
 @login_required

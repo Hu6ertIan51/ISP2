@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduSense Lecturer Dashboard</title>
+    <title>EduSense Admin Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://kit.fontawesome.com/aa11ee7bbf.js" crossorigin="anonymous"></script>
     <style>
@@ -31,7 +31,7 @@
 
         /* Modal Content */
         .modal {
-            display: none; /* Initially hidden */
+            display: none;
             position: fixed;
             z-index: 1;
             left: 0;
@@ -95,15 +95,14 @@
             color: #333;
             cursor: pointer;
         }
-
         .flash {
             width: 50%;
             padding: 10px;
-            margin: 20px 0 10px 0;
+            margin: 20px 0 10px 0; /* Add margin to the top and bottom to give space around the flash message */
             border-radius: 5px;
             font-size: 16px;
-            z-index: 10;
-            position: relative;
+            z-index: 10; /* Ensure it stays on top */
+            position: relative; /* Allow proper stacking in the layout */
             animation: fadeIn 1s ease-in-out;
         }
 
@@ -123,19 +122,50 @@
         }
 
         .flash-messages {
-            margin-top: 20px;
+            margin-top: 20px; /* Add margin to the top of the flash messages container */
         }
 
         .main-content {
-            padding-top: 20px;
+        padding-top: 20px; /* Add space at the top to prevent content from overlapping with flash messages */
+        }
+
+        .view-attendance-btn,
+        .view-grades-btn {
+            width: 100px;
+            margin-bottom: 10px; /* Add space between the buttons */
+            padding: 10px 20px; /* Add padding to make buttons larger */
+            font-size: 14px; /* Adjust text size */
+            border: none; /* Remove default border */
+            border-radius: 5px; /* Round the corners */
+            cursor: pointer; /* Change cursor on hover */
+            display: inline-block; /* Ensure buttons stay inline */
+        }
+
+        .view-attendance-btn {
+            background-color: #6F251B; /* Green background for Attendance */
+            color: white; /* White text */
+        }
+
+        .view-grades-btn {
+            background-color: #6F251B; /* Blue background for Grades */
+            color: white; /* White text */
+        }
+
+        /* Optional: Add hover effects for buttons */
+        .view-attendance-btn:hover {
+            background-color: #1f293e; /* Darker green when hovered */
+        }
+
+        .view-grades-btn:hover {
+            background-color: #1f293e; /* Darker blue when hovered */
         }
     </style>
 </head>
 <body>
-    <div class="icon-container">
+    <div class="icon-container">     
         <form action="{{ url_for('main.logout') }}" method="POST" id="logout-form" style="display: inline;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="logout-btn">
+            <button type="button" class="logout-btn" onclick="confirmLogout()">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
             </button>
         </form>
@@ -146,12 +176,12 @@
                     document.getElementById("logout-form").submit();
                 }
             }
-        </script>   
+        </script>        
     </div>
     <div class="container">
         <div class="sidebar">
             <h2>EduSense</h2>
-            <p>Lecturer Navigation Panel</p>
+            <p>Student Navigation Panel</p>
             <ul>
                 <li><i class="fa-solid fa-house" style="color: #6F251B;"></i>
                     <a href="{{url_for('main.lecturer_dashboard')}}">Dashboard</a></li>
@@ -163,6 +193,7 @@
                     <a href="">Mentor Information</a></li>
             </ul>
         </div>
+
         <div class="main-content">
             <!-- Flash messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -174,27 +205,26 @@
                     </div>
                 {% endif %}
             {% endwith %}
-            <section>
-                <div class="spaceforbanner">
-                    <h2>Unit Registration</h2>
-                </div>
-                <div class="personal-info">
-                    <h2>Available Units</h2>
-                    <div class="profile-info">
-                        <div class="user-info">
-                            <table id="studentTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 20%;">Unit Name</th>
-                                        <th>Unit Code</th>
-                                        <th>Course</th>
-                                        <th>Year Offered</th>
-                                        <th>Semester Offered</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for unit in units %}
+            <div class="spaceforbanner">
+                <h2>Course Information</h2>
+            </div>
+            <div class="personal-info">
+                <h2>Ongoing/Past Units</h2>
+                <div class="profile-info">
+                    <div class="user-info">
+                        <table id="studentTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 15%;">Unit Name</th>
+                                    <th style="width: 10%;">Unit Code</th>
+                                    <th style="width: 10%;">Course</th>
+                                    <th style="width: 10%;">Year Offered</th>
+                                    <th style="width: 10%;">Semester Offered</th>
+                                    <th style="width: 5%;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for unit in units %}
                                     <tr>
                                         <td>{{ unit.unit_name }}</td>
                                         <td>{{ unit.unit_code }}</td>
@@ -202,65 +232,27 @@
                                         <td>{{ unit.year_offered }}</td>
                                         <td>{{ unit.semester_offered }}</td>
                                         <td>
-                                            {% if unit.registration_status == '1' %}
-                                                <button type="button" class="add-unit-btn" disabled>
-                                                    <i class="fa-solid fa-check"></i> Registered
-                                                </button>
-                                            {% else %}
-                                                <button type="button" class="add-unit-btn" onclick="openModal('{{ unit.id }}')">
-                                                    <i class="fa-solid fa-plus"></i> Register Unit
-                                                </button>
-                                            {% endif %}
+                                            <button type="button" class="view-grades-btn">
+                                                <i class="fa-solid fa-book" style="color:#ccc;"></i> Manage Unit Information
+                                            </button>
                                         </td>
                                     </tr>
-                                    {% endfor %}
-                                </tbody>                                         
-                            </table>
-                        </div> 
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6">No units in progress.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div> 
+                </div>
+            </div>
                     </div>
                 </div>
-                
-                <!-- Modals for Unit Registration -->
-                {% for unit in units %}
-                <div id="registerModal_{{ unit.id }}" class="modal">
-                    <div class="modal-content">
-                        <span class="close" onclick="closeModal('{{ unit.id }}')">&times;</span>
-                        <h3>Register for Unit</h3>
-                        <form action="{{ url_for('main.unit_enrollment') }}" method="POST">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="lecturer_id" value="{{ current_user.id }}">
-                            <input type="hidden" name="unit_id" value="{{ unit.id }}">
-                
-                            <div>
-                                <label for="unit_name">Unit Name:</label>
-                                <input type="text" id="unit_name" name="unit_name" value="{{ unit.unit_name }}" readonly>
-                            </div>
-                            
-                            <div>
-                                <label for="unit_code">Unit Code:</label>
-                                <input type="text" id="unit_code" name="unit_code" value="{{ unit.unit_code }}" readonly>
-                            </div>
-                            
-                            <button type="submit">Register</button>
-                        </form>
-                    </div>
-                </div>
-                {% endfor %}
-            </section>
             <footer>
                 <p>&copy; 2024</p>
             </footer>
         </div>
     </div>
-
-    <script>
-        function openModal(unitId) {
-            document.getElementById(`registerModal_${unitId}`).style.display = 'flex';  // Use 'flex' to show modal
-        }
-        
-        function closeModal(unitId) {
-            document.getElementById(`registerModal_${unitId}`).style.display = 'none'; // Close the modal
-        }
-    </script>
 </body>
 </html>
