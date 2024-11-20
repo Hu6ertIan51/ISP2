@@ -293,7 +293,6 @@ class Student:
             return True  # Registration successful
         else:
             return False  # Error: Invalid admission number or unit code
-        
     
 class Lecturer:
     def __init__(self, user_id, school, lecturer_number, year_intake, lecturer_status, full_name=None, mobile_number=None, email=None):
@@ -564,8 +563,6 @@ class Unit:
         results = fetch_all(db, query, (lecturer_id,))
         return results
 
- 
-    
     @staticmethod
     def register_unit_for_lecturer(lecturer_id, unit_id, db):
         # Validate the unit_id exists in the units table
@@ -590,7 +587,6 @@ class Unit:
         execute_query(db, insert_query, (lecturer_id, unit_id))
         return True
 
-    
     @staticmethod
     def get_sces_units_with_registration_status(lecturer_id, db):
         query = """
@@ -622,6 +618,28 @@ class Unit:
 
         return units
 
+    @staticmethod
+    def fetch_registered_units(admission_number, db):
+        """
+        Fetch all units a student is registered for using their admission number.
+
+        Args:
+            admission_number (str): The student's admission number.
+            db (DatabaseConnection): The database connection object.
+
+        Returns:
+            list[dict]: List of dictionaries containing unit details.
+        """
+        query = """
+        SELECT u.id, u.unit_name, u.unit_code, u.school, u.course, u.year_offered, 
+               u.semester_offered, u.status
+        FROM student_unit_registrations sur
+        JOIN units u ON sur.unit_id = u.id
+        JOIN student_details sd ON sur.student_id = sd.id
+        WHERE sd.admission_number = %s
+        """
+        results = fetch_all(db, query, (admission_number,))
+        return results
 
 class FacultyAdmin:
     def __init__(self, user_id, school, faculty, faculty_number, faculty_status, full_name=None, mobile_number=None, email=None):
@@ -680,3 +698,48 @@ class FacultyAdmin:
                 faculty_status=result['faculty_status']
             )
         return None
+    
+class Attendance:
+    def __init__(self, unit_id, student_id, admission_number, class_date, hours_attended, total_hours, attendance_status):
+        self.unit_id = unit_id
+        self.student_id = student_id
+        self.admission_number = admission_number
+        self.class_date = class_date
+        self.hours_attended = hours_attended
+        self.total_hours = total_hours
+        self.attendance_status = attendance_status
+
+    @staticmethod
+    def create_attendance(db_connection, attendance):
+        """
+        Inserts a new attendance record into the database.
+
+        :param db_connection: The database connection object.
+        :param attendance: An instance of the Attendance class.
+        """
+        query = """
+        INSERT INTO attendance (unit_id, student_id, admission_number, class_date, hours_attended, total_hours, attendance_status)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        data = (
+            attendance.unit_id,
+            attendance.student_id,
+            attendance.admission_number,
+            attendance.class_date,
+            attendance.hours_attended,
+            attendance.total_hours,
+            attendance.attendance_status
+        )
+
+        try:
+            cursor = db_connection.cursor()
+            cursor.execute(query, data)
+            db_connection.commit()
+            print("Attendance record created successfully.")
+        except Exception as e:
+            print(f"Error creating attendance record: {e}")
+            db_connection.rollback()
+        finally:
+            cursor.close()
+
+    

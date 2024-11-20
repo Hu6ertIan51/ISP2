@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
-from .models import User, Student, Lecturer, Unit, SystemAdmin, FacultyAdmin
+from .models import User, Student, Lecturer, Unit, SystemAdmin, FacultyAdmin, Attendance
 from .db import get_db_connection, fetch_one, fetch_all
 from functools import wraps
 from datetime import datetime
@@ -745,6 +745,98 @@ def inprogressunitslec():
         units=units
     )
 
+@main.route('/manageunitlec/<int:unit_id>', methods=['GET'])
+@login_required
+@role_required('2')  # Assuming '2' is lecturer
+def manageunitlec(unit_id):
+    db = get_db_connection()
+    lecturer_id = current_user.id
+
+    # Validate if lecturer has access to the unit
+    query = """
+    SELECT 1
+    FROM lecturer_unit_registrations
+    WHERE lecturer_id = %s AND unit_id = %s
+    """
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(query, (lecturer_id, unit_id))
+    if not cursor.fetchone():
+        flash("Unauthorized access to this unit.", "error")
+        return redirect(url_for('main.lecturer_dashboard'))
+
+    # Fetch students for this specific unit
+    query_students = """
+    SELECT s.admission_number, s.course, su.student_id
+    FROM student_details s
+    JOIN student_unit_registrations su ON su.student_id = s.id
+    WHERE su.unit_id = %s
+    """
+    cursor.execute(query_students, (unit_id,))
+    students = cursor.fetchall()
+    cursor.close()
+
+    return render_template('LecturerModule/ManageUnit.html', students=students, unit_id=unit_id)
+
+@main.route('/attendance/<admission_number>', methods=['POST'])
+@login_required
+@role_required('2')  # Assuming '2' is lecturer
+def record_attendance(admission_number):
+    db = get_db_connection()
+    lecturer_id = current_user.id
+
+    # Get form data
+    student_id = request.form.get('student_id')
+    unit_id = request.form.get('unit_id')
+    class_date = request.form.get('class_date')
+    hours_attended = request.form.get('hours_attended')
+    total_hours = request.form.get('total_hours')
+    attendance_status = request.form.get('attendance_status')
+
+    # Validate lecturer's access to the unit
+    query_validate_lecturer = """
+    SELECT 1
+    FROM lecturer_unit_registrations
+    WHERE lecturer_id = %s AND unit_id = %s
+    """
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(query_validate_lecturer, (lecturer_id, unit_id))
+    if not cursor.fetchone():
+        flash("Unauthorized action for this unit.", "error")
+        return redirect(url_for('main.lecturer_dashboard'))
+
+    # Fetch specific student's details for the selected unit
+    query_student = """
+    SELECT s.admission_number, s.course, su.student_id
+    FROM student_details s
+    JOIN student_unit_registrations su ON su.student_id = s.id
+    WHERE su.unit_id = %s AND s.admission_number = %s
+    """
+    cursor.execute(query_student, (unit_id, admission_number))
+    student = cursor.fetchone()
+
+    if not student:
+        flash("Student not registered for this unit.", "error")
+        cursor.close()
+        return redirect(url_for('main.lecturer_dashboard'))
+
+    # Insert attendance record into the database
+    query_insert = """
+    INSERT INTO attendance (student_id, admission_number, unit_id, class_date, hours_attended, total_hours, attendance_status)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """
+    try:
+        cursor.execute(query_insert, (student_id, admission_number, unit_id, class_date, hours_attended, total_hours, attendance_status))
+        db.commit()
+        flash("Attendance recorded successfully!", "success")
+    except Exception as e:
+        db.rollback()
+        flash(f"Error recording attendance: {str(e)}", "error")
+    finally:
+        cursor.close()
+
+    return redirect(url_for('main.manageunitlec', student_id=student_id, unit_id=unit_id))
+
+
 @main.route('/viewlecturers')
 @login_required
 @role_required('0')
@@ -823,3 +915,4 @@ def logout():
     return redirect(url_for('main.login_page'))  # Redirect to login page
  
 
+ 

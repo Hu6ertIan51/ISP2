@@ -90,4 +90,22 @@ CREATE TABLE IF NOT EXISTS lecturer_unit_registrations (
     FOREIGN KEY (unit_id) REFERENCES units(id)
 );
 
+CREATE TABLE IF NOT EXISTS attendance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    unit_id INT NOT NULL,
+    student_id INT NOT NULL,
+    admission_number VARCHAR(255),
+    class_date DATE NOT NULL,
+    hours_attended INT NOT NULL,
+    total_hours INT NOT NULL,
+    attendance_percentage FLOAT GENERATED ALWAYS AS ((hours_attended / total_hours) * 100),
+    attendance_status ENUM('Present', 'Absent') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES student_details(id) ON DELETE CASCADE
+);
+
+
+
+
 
