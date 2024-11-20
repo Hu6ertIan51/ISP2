@@ -98,12 +98,15 @@ CREATE TABLE IF NOT EXISTS attendance (
     class_date DATE NOT NULL,
     hours_attended INT NOT NULL,
     total_hours INT NOT NULL,
-    attendance_percentage FLOAT GENERATED ALWAYS AS ((hours_attended / total_hours) * 100),
+    attendance_percentage FLOAT GENERATED ALWAYS AS ((total_updated_hours / total_hours) * 100),
+    absenteeism_percentage FLOAT GENERATED ALWAYS AS (100-(100 - ((hours_attended / total_hours) * 100))),
     attendance_status ENUM('Present', 'Absent') NOT NULL,
+    total_updated_hours INT DEFAULT 0, -- New column for cumulative hours
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES student_details(id) ON DELETE CASCADE
 );
+
 
 
 

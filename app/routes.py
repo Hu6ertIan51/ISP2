@@ -434,6 +434,39 @@ def register_student_unit():
     # Render the template and pass the student and units data
     return render_template('register_student_unit.html', student=student, units=units)
 
+@main.route('/student_attendance', methods=['GET', 'POST'])
+@login_required
+@role_required('1')  # Student role
+def student_attendance():
+    db = get_db_connection()
+    
+    if db is None:
+        flash("Failed to connect to the database", "error")
+        return redirect(url_for('main.index'))  # Redirect to homepage or error page
+
+    try:
+        # Fetch the student object by current_user.id (assuming current_user is properly set up)
+        student = Student.find_by_student_id(db, current_user.id)
+
+        if student is None:
+            flash("Student record not found.", "error")
+            return redirect(url_for('main.index'))  # Redirect if student not found
+
+        # Fetch attendance details for the student using the student's ID
+        attendance = Student.get_student_attendance_by_id(student, db)
+
+        # If no attendance data is found, you can add a flash message for that as well
+        if not attendance:
+            flash("No attendance records found.", "info")
+        
+    except Exception as e:
+        # Catch any unexpected errors 
+        flash(f"An error occurred: {str(e)}", "error")
+        return redirect(url_for('main.index'))  # Redirect on error
+
+    # Pass student and attendance data to the template
+    return render_template('StudentModule/AttendanceRecords.html', student=student, attendance=attendance)
+
 
 @main.route('/available_units', methods=['GET', 'POST'])
 @login_required
@@ -788,8 +821,8 @@ def record_attendance(admission_number):
     student_id = request.form.get('student_id')
     unit_id = request.form.get('unit_id')
     class_date = request.form.get('class_date')
-    hours_attended = request.form.get('hours_attended')
-    total_hours = request.form.get('total_hours')
+    hours_attended = int(request.form.get('hours_attended'))
+    total_hours = int(request.form.get('total_hours'))
     attendance_status = request.form.get('attendance_status')
 
     # Validate lecturer's access to the unit
@@ -804,20 +837,17 @@ def record_attendance(admission_number):
         flash("Unauthorized action for this unit.", "error")
         return redirect(url_for('main.lecturer_dashboard'))
 
-    # Fetch specific student's details for the selected unit
-    query_student = """
-    SELECT s.admission_number, s.course, su.student_id
-    FROM student_details s
-    JOIN student_unit_registrations su ON su.student_id = s.id
-    WHERE su.unit_id = %s AND s.admission_number = %s
+    # Check if the attendance for the same date, student, and unit already exists
+    query_check_duplicate = """
+    SELECT 1
+    FROM attendance
+    WHERE student_id = %s AND unit_id = %s AND class_date = %s
     """
-    cursor.execute(query_student, (unit_id, admission_number))
-    student = cursor.fetchone()
-
-    if not student:
-        flash("Student not registered for this unit.", "error")
+    cursor.execute(query_check_duplicate, (student_id, unit_id, class_date))
+    if cursor.fetchone():
+        flash("Attendance for this date has already been recorded.", "error")
         cursor.close()
-        return redirect(url_for('main.lecturer_dashboard'))
+        return redirect(url_for('main.manageunitlec', student_id=student_id, unit_id=unit_id))
 
     # Insert attendance record into the database
     query_insert = """
@@ -826,6 +856,19 @@ def record_attendance(admission_number):
     """
     try:
         cursor.execute(query_insert, (student_id, admission_number, unit_id, class_date, hours_attended, total_hours, attendance_status))
+        
+        # Update cumulative total_updated_hours
+        query_update_hours = """
+        UPDATE attendance
+        SET total_updated_hours = (
+            SELECT COALESCE(SUM(hours_attended), 0)
+            FROM attendance
+            WHERE student_id = %s AND unit_id = %s
+        )
+        WHERE student_id = %s AND unit_id = %s
+        """
+        cursor.execute(query_update_hours, (student_id, unit_id, student_id, unit_id))
+
         db.commit()
         flash("Attendance recorded successfully!", "success")
     except Exception as e:
@@ -835,8 +878,8 @@ def record_attendance(admission_number):
         cursor.close()
 
     return redirect(url_for('main.manageunitlec', student_id=student_id, unit_id=unit_id))
-
-
+         
+  
 @main.route('/viewlecturers')
 @login_required
 @role_required('0')

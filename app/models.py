@@ -107,7 +107,8 @@ class SystemAdmin:
         return None
 
 class Student:
-    def __init__(self, user_id, school, course, admission_number, current_year, year_intake, international, academic_status, full_name = None, mobile_number = None, email = None):
+    def __init__(self, id, user_id, school, course, admission_number, current_year, year_intake, international, academic_status, full_name = None, mobile_number = None, email = None):
+        self.id = id
         self.user_id = user_id
         self.school= school
         self.course = course
@@ -150,7 +151,7 @@ class Student:
     def find_by_user_id(user_id, db):
         """Query student details by user ID, including the student's name."""
         query = """ 
-        SELECT u.full_name, sd.user_id, sd.school, sd.course, sd.admission_number, sd.current_year, u.mobile_number, u.email, sd.year_intake, sd.international, sd.academic_status
+        SELECT u.full_name, sd. id, sd.user_id, sd.school, sd.course, sd.admission_number, sd.current_year, u.mobile_number, u.email, sd.year_intake, sd.international, sd.academic_status
         FROM student_details sd
         JOIN users u ON sd.user_id = u.id
         WHERE sd.user_id = %s
@@ -158,6 +159,7 @@ class Student:
         result = fetch_one(db, query, (user_id,))
         if result:
             return Student(
+                id=result['id'],
                 user_id=result['user_id'],
                 school=result['school'],
                 course=result['course'],
@@ -174,9 +176,9 @@ class Student:
     
     @staticmethod
     def find_by_student_id(db, user_id):
-        """Query student details by user ID, including the student's name."""
+        """Query student details by user ID, including the student's name and add id attribute."""
         query = """
-        SELECT u.full_name, sd.user_id, sd.school, sd.course, sd.admission_number, sd.current_year, u.mobile_number, u.email, sd.year_intake, sd.international, sd.academic_status
+        SELECT u.id, u.full_name, sd.user_id, sd.school, sd.course, sd.admission_number, sd.current_year, u.mobile_number, u.email, sd.year_intake, sd.international, sd.academic_status
         FROM student_details sd
         JOIN users u ON sd.user_id = u.id
         WHERE sd.user_id = %s
@@ -184,6 +186,7 @@ class Student:
         result = fetch_one(db, query, (user_id,))
         if result:
             return Student(
+                id=result['id'], 
                 user_id=result['user_id'],
                 school=result['school'],
                 course=result['course'],
@@ -197,6 +200,7 @@ class Student:
                 academic_status=result['academic_status']
             )
         return None
+
     
     @staticmethod
     def get_units_for_student(db, user_id, status="Active"):
@@ -293,6 +297,56 @@ class Student:
             return True  # Registration successful
         else:
             return False  # Error: Invalid admission number or unit code
+    
+    @staticmethod
+    def get_student_attendance_by_id(student, db):
+            if db is None:
+                raise ValueError("Database connection is None")  # Ensure db is valid
+
+            # Ensure student is a Student object and has an 'id' attribute
+            if not isinstance(student, Student) or not hasattr(student, 'id'):
+                raise AttributeError("Student object has no 'id' attribute.")
+            
+            query = """
+            SELECT a.class_date, a.hours_attended, a.total_hours, a.attendance_status
+            FROM attendance a
+            JOIN units u ON a.unit_id = u.id
+            WHERE a.student_id = %s;
+            """
+            
+            results = fetch_all(db, query, (student.id,))
+            
+            # Debug: Check the structure of results
+            print("Attendance Query Results:", results)  # Ensure this returns expected data format
+            
+            # Ensure results are in a usable format (list of dicts or tuples)
+            attendance_records = []
+            if results:  # Check if results are not empty
+                for result in results:
+                    # Assuming fetch_all returns a list of dictionaries or tuples
+                    if isinstance(result, dict):
+                        attendance_records.append({
+                            'class_date': result.get('class_date'),
+                            'hours_attended': result.get('hours_attended'),
+                            'total_hours': result.get('total_hours'),
+                            'attendance_status': result.get('attendance_status')
+                        })
+                    else:
+                        # If results are in a tuple, adjust to match the format (index-based access)
+                        attendance_records.append({
+                            'class_date': result[0],
+                            'hours_attended': result[1],
+                            'total_hours': result[2],
+                            'attendance_status': result[3]
+                        })
+            return attendance_records
+
+
+
+
+
+
+  
     
 class Lecturer:
     def __init__(self, user_id, school, lecturer_number, year_intake, lecturer_status, full_name=None, mobile_number=None, email=None):

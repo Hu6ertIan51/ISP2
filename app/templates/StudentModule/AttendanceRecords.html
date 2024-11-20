@@ -10,7 +10,7 @@
 <body>
     <div class="icon-container">
         <button class="logout-btn">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i>Log Out
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
         </button>
     </div>
     <div class="container">
@@ -18,66 +18,55 @@
             <h2>EduSense</h2>
             <p>Student Navigation Panel</p>
             <ul>
-                <li><i class="fa-solid fa-house" style="color: #6F251B;" class = "active"></i>
-                    <a href="{{url_for('student_dashboard')}}">Dashboard</a></li>
-                <li><i class="fa-solid fa-clipboard" style="color:#6F251B;"></i>
-                    <a href="{{url_for('student_records')}}">Attendance Records</a></li>
-                <li><i class="fa-solid fa-book" style="color:#6F251B;"></i>
-                    <a href="{{url_for('progress_reportt')}}">Grades</a></li>
-                <li><i class="fa-solid fa-money-bill" style="color:#6F251B;"></i>
-                    <a href="{{url_for('fee_balance')}}">Fee Balance</a></li>
+                <li><i class="fa-solid fa-house" style="color: #6F251B;" class="active"></i>
+                    <a href="{{ url_for('main.student_dashboard') }}">Dashboard</a></li>
+                <li><i class="fa-brands fa-flipboard" style="color:#6F251B;"></i>    
+                    <a href="{{ url_for('main.available_units') }}">Unit Registration</a></li>
+                <li><i class="fa-brands fa-flipboard" style="color:#6F251B;"></i>    
+                    <a href="{{ url_for('main.inprogressunits') }}">In Progress Units</a></li>
                 <li><i class="fa-solid fa-person" style="color:#6F251B;"></i>
-                    <a href="{{url_for('mentor_info')}}">Mentor Information</a></li>
+                    <a href="">Mentor Information</a></li>
             </ul>
         </div>
         <div class="main-content">
             <section>
                 <div class="attendance-section">
                     <h2>Student Attendance Information</h2>
-                </div>
-                <div class="academic-info">
-                    <h2>Academic Information</h2>
-                    <table>
-                        <tr>
-                            <td><strong>Intake:</strong></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Academic Status:</strong></td>
-                            <td></td>
-                        </tr>
-                    </table>
+                    <p><strong>Intake:</strong> {{ student.year_intake }}</p>
+                    <p><strong>Academic Status:</strong> {{ 'Active' if student.education_status == 0 else 'Inactive' }}</p>
                 </div>
                 <div class="academic-info">
                     <h2>Academic Year</h2>
-                    <form method="GET" action="/handle_academic_year_selection">
-                        <select name="academic_year" id="academic-year" onchange="this.form.submit()">
-                            <option value="2020">2020</option>
-                            <option value="2021">2021</option>
-                            <option value="2022">2022</option>
-                            <option value="2023">2023</option>
-                            <!-- Add more options based on available years -->
-                        </select>
-                    </form>
                     <table>
-                        <tr>
-                            <td><strong>Unit Code</strong></td>
-                            <td><strong>Name</strong></td>
-                            <td><strong>Group</strong></td>
-                            <td><strong>Period</strong></td>
-                            <td><strong>Lecturer</strong></td>
-                            <td><strong>Total hours</strong></td>
-                            <td><strong>Absent classes </strong></td>
-                            <td><strong>Absent hours</strong></td>
-                            <td><strong>Present Hours</strong></td>
-                            <td><strong>Detail</strong></td>
-                        </tr>
-
+                        <thead>
+                            <tr>
+                                <th><strong>Class Date</strong></th>
+                                <th><strong>Hours Attended</strong></th>
+                                <th><strong>Total Hours</strong></th>
+                                <th><strong>Attendance Status</strong></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if attendance %}
+                                {% for record in attendance %}
+                                    <tr>
+                                        <td>{{ record.class_date }}</td>
+                                        <td>{{ record.hours_attended }}</td>
+                                        <td>{{ record.total_hours }}</td>
+                                        <td>{{ record.attendance_status }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4">No attendance records found.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
                     </table>
                 </div>
             </section>
             <footer>
-                <p>&copy; 2024</p>
+                <p>&copy; 2024 EduSense</p>
             </footer>
         </div>
     </div>

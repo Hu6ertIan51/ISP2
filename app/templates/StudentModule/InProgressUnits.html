@@ -232,10 +232,10 @@
                                         <td>{{ unit.year_offered }}</td>
                                         <td>{{ unit.semester_offered }}</td>
                                         <td>
-                                            <button type="button" class="view-grades-btn" onclick="openModal()">
+                                            <button type="button" class="view-grades-btn" onclick="">
                                                 <i class="fa-solid fa-book" style="color:#ccc;"></i> Grades
-                                            </button>
-                                            <button type="button" class="view-attendance-btn" onclick="openModal()">
+                                            </button>                                            
+                                            <button type="button" class="view-attendance-btn" onclick="window.location.href='{{ url_for('main.student_attendance') }}'">
                                                 <i class="fa-solid fa-book" style="color:#ccc;"></i> Attendance
                                             </button>
                                         </td>
@@ -250,7 +250,6 @@
                     </div> 
                 </div>
             </div>
-
                 <div id="" class="modal">
                     <div class="modal-content">
                         <span class="close" onclick="closeModal()">&times;</span>
