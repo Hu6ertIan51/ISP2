@@ -21,16 +21,16 @@
             <h2>EduSense</h2>
             <p>Lecturer Navigation Panel</p>
             <ul>
-                <li><i class="fa-solid fa-house" style="color: #6F251B;" class = "active"></i>
-                    <a href="{{url_for('lecturer_dashboard')}}">Dashboard</a></li>
+                <li><i class="fa-solid fa-house" style="color: #6F251B;"></i>
+                    <a href="{{url_for('main.lecturer_dashboard')}}">Dashboard</a></li>
                 <li><i class="fa-solid fa-clipboard" style="color:#6F251B;"></i>
-                    <a href="{{url_for('register_unit')}}">Register Units</a></li>
+                    <a href="{{url_for('main.lecregunits')}}">Register Units</a></li>
+                <li><i class="fa-brands fa-flipboard" style="color:#6F251B;"></i>    
+                    <a href="{{ url_for('main.inprogressunitslec') }}">In Progress Units</a></li>
                 <li><i class="fa-solid fa-clipboard" style="color:#6F251B;"></i>
-                    <a href="{{url_for('lecturer_attendance')}}">Post Attendance Records</a></li>
-                <li><i class="fa-solid fa-book" style="color:#6F251B;"></i>
-                    <a href="{{url_for('input_grades')}}">Post Student Grades</a></li>
+                    <a href="{{url_for('main.editattendance')}}">Manage Attendance</a></li>
                 <li><i class="fa-solid fa-person" style="color:#6F251B;"></i>
-                    <a href="{{url_for('mentor_login')}}">Mentor Login</a></li>
+                    <a href="">Mentor Information</a></li>
             </ul>
         </div>
         <div class="main-content">

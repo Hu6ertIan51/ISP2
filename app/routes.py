@@ -1,9 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from .models import User, Student, Lecturer, Unit, SystemAdmin, FacultyAdmin, Attendance
-from .db import get_db_connection, fetch_one, fetch_all
+from .db import get_db_connection, fetch_one, fetch_all, execute_query
 from functools import wraps
 from datetime import datetime
+from collections import defaultdict 
 
 main = Blueprint('main', __name__)
 
@@ -20,15 +21,16 @@ def login_required(f):
     return decorated_function
 
 def role_required(role):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not current_user.is_authenticated or current_user.role != role:
-                flash('Access denied.', 'error')
-                return redirect(url_for('main.login_page'))  # or a custom "access denied" page
-            return f(*args, **kwargs)
-        return decorated_function
+    def decorator(func):
+        @wraps(func)
+        def wrapped_function(*args, **kwargs):
+            if current_user.role != role:  # Assuming 'role' is a property of current_user
+                flash("Access denied: Unauthorized role.", "error")
+                return redirect(url_for('main.login_page'))  # Redirect to a default page
+            return func(*args, **kwargs)
+        return wrapped_function
     return decorator
+
 
 @main.route('/login', methods=['GET', 'POST'])
 def login_user_view():
@@ -434,38 +436,91 @@ def register_student_unit():
     # Render the template and pass the student and units data
     return render_template('register_student_unit.html', student=student, units=units)
 
-@main.route('/student_attendance', methods=['GET', 'POST'])
+@main.route('/student/attendance', methods=['GET'])
+@main.route('/student/attendance/<int:unit_id>', methods=['GET'])  # Accept unit_id from URL
 @login_required
 @role_required('1')  # Student role
-def student_attendance():
+def student_attendance(unit_id=None):
     db = get_db_connection()
-    
-    if db is None:
-        flash("Failed to connect to the database", "error")
-        return redirect(url_for('main.index'))  # Redirect to homepage or error page
-
     try:
-        # Fetch the student object by current_user.id (assuming current_user is properly set up)
-        student = Student.find_by_student_id(db, current_user.id)
+        # Fetch the student record using current_user.id
+        query_student = "SELECT * FROM student_details WHERE user_id = %s;"
+        student_result = fetch_one(db, query_student, (current_user.id,))
 
-        if student is None:
+        if not student_result:
             flash("Student record not found.", "error")
-            return redirect(url_for('main.index'))  # Redirect if student not found
+            return redirect(url_for('main.index'))
 
-        # Fetch attendance details for the student using the student's ID
-        attendance = Student.get_student_attendance_by_id(student, db)
+        # If a unit_id is provided, fetch only the attendance for that unit
+        if unit_id:
+            query_attendance = """
+            SELECT 
+                a.class_date, 
+                a.hours_attended, 
+                a.total_hours, 
+                a.attendance_status, 
+                a.absenteeism_percentage,
+                u.unit_name -- Include unit name
+            FROM 
+                attendance a
+            JOIN 
+                units u ON a.unit_id = u.id
+            WHERE 
+                a.student_id = %s AND a.unit_id = %s
+            ORDER BY 
+                a.class_date;
+            """
+            attendance_results = fetch_all(db, query_attendance, (student_result['id'], unit_id))
+        else:
+            # If no unit_id is provided, fetch all attendance records for the student
+            query_attendance = """
+            SELECT 
+                a.class_date, 
+                a.hours_attended, 
+                a.total_hours, 
+                a.attendance_status, 
+                a.absenteeism_percentage,
+                u.unit_name -- Include unit name
+            FROM 
+                attendance a
+            JOIN 
+                units u ON a.unit_id = u.id
+            WHERE 
+                a.student_id = %s
+            ORDER BY 
+                u.unit_name, a.class_date;
+            """
+            attendance_results = fetch_all(db, query_attendance, (student_result['id'],))
 
-        # If no attendance data is found, you can add a flash message for that as well
-        if not attendance:
-            flash("No attendance records found.", "info")
-        
+        # Group attendance records by unit
+        attendance_by_unit = defaultdict(list)
+        for record in attendance_results:
+            unit_name = record['unit_name']
+            attendance_by_unit[unit_name].append({
+                'class_date': record['class_date'],
+                'hours_attended': record['hours_attended'],
+                'total_hours': record['total_hours'],
+                'attendance_status': record['attendance_status'],
+                'absenteeism_percentage': record['absenteeism_percentage'],
+            })
+
+        # Sort attendance records by class_date (latest first) to show the most recent absenteeism
+        for unit in attendance_by_unit:
+            attendance_by_unit[unit].sort(key=lambda x: x['class_date'], reverse=True)
+
+        # Convert to a regular dictionary for easier rendering
+        attendance_by_unit = dict(attendance_by_unit)
+
+        # Render the attendance page
+        return render_template(
+            'StudentModule/AttendanceRecords.html',
+            attendance_by_unit=attendance_by_unit,  # Pass grouped data
+            student=student_result  # Pass the student details to the template
+        )
+
     except Exception as e:
-        # Catch any unexpected errors 
         flash(f"An error occurred: {str(e)}", "error")
-        return redirect(url_for('main.index'))  # Redirect on error
-
-    # Pass student and attendance data to the template
-    return render_template('StudentModule/AttendanceRecords.html', student=student, attendance=attendance)
+        return redirect(url_for('main.student_dashboard'))
 
 
 @main.route('/available_units', methods=['GET', 'POST'])
@@ -530,6 +585,7 @@ def available_units():
     
     return render_template('StudentModule/UnitRegistration.html', student=student, units=units) 
 
+
 @main.route('/inprogressunits', methods=['GET', 'POST'])
 @login_required
 @role_required('1')  # Ensure the user is a student
@@ -549,6 +605,352 @@ def inprogressunits():
         flash(f"Error fetching units: {str(e)}", 'error')
         print(f"Error fetching units: {str(e)}")
         return redirect(url_for('main.student_dashboard'))
+
+@main.route('/attendance/<unit_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('1')  # Ensure the user is a student
+def attendance(unit_id):
+    db = get_db_connection()  # Step 1: Establish a database connection
+
+    try:
+        # Step 2: Fetch the student details for the logged-in user
+        student = Student.find_by_student_id(current_user.id, db)
+        if not student:
+            flash("Student record not found.", 'error')
+            return redirect(url_for('main.student_dashboard'))
+
+        # Step 3: Fetch the unit based on unit_id
+        unit_query = """SELECT * FROM units WHERE id = %s"""
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(unit_query, (unit_id,))
+        unit = cursor.fetchone()  # Fetch the unit details
+
+        # If unit is not found, flash an error and redirect
+        if not unit:
+            flash("Unit not found.", 'error')
+            return redirect(url_for('main.inprogressunits'))
+
+        # Step 4: Fetch attendance for the student in the selected unit
+        attendance_query = """SELECT * FROM attendance WHERE unit_id = %s AND student_id = %s"""
+        cursor.execute(attendance_query, (unit_id, student.id))  # Use student.id
+        attendance_records = cursor.fetchall()  # Fetch all attendance records
+
+        cursor.close()  # Close the cursor to free up resources
+
+        # Step 5: If no attendance records found, flash a warning
+        if not attendance_records:
+            flash("No attendance records found for this unit.", 'warning')
+
+        # Render the attendance records page with the fetched data
+        return render_template('StudentModule/AttendanceRecords.html', unit=unit, attendance_records=attendance_records)
+
+    except Exception as e:
+        # Catch any exceptions and display an error message
+        flash(f"Error fetching attendance: {str(e)}", 'error')
+        print(f"Error fetching attendance: {str(e)}")  # Log the error for debugging
+        return redirect(url_for('main.student_dashboard'))
+
+@main.route('/manageunitslec/<int:unit_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('2')  # Lecturer role
+def manageunitslec(unit_id):
+
+    db = get_db_connection()
+    lecturer_id = current_user.id
+
+    # Validate if lecturer has access to the unit
+    query = """
+    SELECT 1
+    FROM lecturer_unit_registrations
+    WHERE lecturer_id = %s AND unit_id = %s
+    """
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(query, (lecturer_id, unit_id))
+    if not cursor.fetchone():
+        flash("Unauthorized access to this unit.", "error")
+        return redirect(url_for('main.lecturer_dashboard'))
+
+    # Fetch students for this specific unit
+    query_students = """
+    SELECT s.admission_number, s.course, su.student_id AS id
+    FROM student_details s
+    JOIN student_unit_registrations su ON su.student_id = s.id
+    WHERE su.unit_id = %s
+    """
+    cursor.execute(query_students, (unit_id,))
+    students = cursor.fetchall()
+    cursor.close()
+
+    return render_template('LecturerModule/LecManageUnits.html', students=students, unit_id=unit_id)
+
+@main.route('/attendance', methods=['POST'])
+@login_required
+@role_required('2')  
+def record_attendance():
+    db = get_db_connection()
+    lecturer_id = current_user.id
+
+    # Get form data
+    admission_number = request.form.get('admission_number')  # Adjusting to fetch admission number
+    unit_id = request.form.get('unit_id')
+    class_date = request.form.get('class_date')
+    hours_attended = int(request.form.get('hours_attended'))
+    total_hours = int(request.form.get('total_hours'))
+    attendance_status = request.form.get('attendance_status')
+
+    # Validate lecturer's access to the unit
+    query_validate_lecturer = """
+    SELECT 1
+    FROM lecturer_unit_registrations
+    WHERE lecturer_id = %s AND unit_id = %s
+    """
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(query_validate_lecturer, (lecturer_id, unit_id))
+    if not cursor.fetchone():
+        flash("Unauthorized action for this unit.", "error")
+        return redirect(url_for('main.lecturer_dashboard'))
+
+    # Fetch the student_id using the admission_number and unit_id
+    query_get_student_id = """
+    SELECT student_id
+    FROM student_unit_registrations
+    WHERE admission_number = %s AND unit_id = %s
+    """
+    cursor.execute(query_get_student_id, (admission_number, unit_id))
+    student = cursor.fetchone()
+
+    if not student:
+        flash("No student found with the provided admission number for this unit.", "error")
+        return redirect(url_for('main.manageunitslec', unit_id=unit_id))
+
+    student_id = student['student_id']
+
+    # Check if the attendance for the same date, student, and unit already exists
+    query_check_duplicate = """
+    SELECT 1 
+    FROM attendance
+    WHERE student_id = %s AND unit_id = %s AND class_date = %s
+    """
+    cursor.execute(query_check_duplicate, (student_id, unit_id, class_date))
+    if cursor.fetchone():
+        flash("Attendance for this date has already been recorded.", "error")
+        cursor.close()
+        return redirect(url_for('main.manageunitslec', student_id=student_id, unit_id=unit_id))
+
+    # Insert attendance record into the database
+    query_insert = """
+    INSERT INTO attendance (student_id, unit_id, class_date, hours_attended, total_hours, attendance_status)
+    VALUES (%s, %s, %s, %s, %s, %s)
+    """
+    try:
+        cursor.execute(query_insert, (student_id, unit_id, class_date, hours_attended, total_hours, attendance_status))
+        
+        # Update cumulative total_updated_hours
+        query_update_hours = """
+        UPDATE attendance
+        SET total_updated_hours = (
+            SELECT COALESCE(SUM(hours_attended), 0)
+            FROM attendance
+            WHERE student_id = %s AND unit_id = %s
+        )
+        WHERE student_id = %s AND unit_id = %s
+        """
+        cursor.execute(query_update_hours, (student_id, unit_id, student_id, unit_id))
+
+        db.commit()
+        flash("Attendance recorded successfully!", "success")
+    except Exception as e:
+        db.rollback()
+        flash(f"Error recording attendance: {str(e)}", "error")
+    finally:
+        cursor.close()
+
+    return redirect(url_for('main.manageunitslec', student_id=student_id, unit_id=unit_id))
+
+@main.route('/editattendance/<int:unit_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('2')  # Lecturer role
+def editattendance(unit_id):
+    db = get_db_connection()
+    lecturer_id = current_user.id
+    cursor = None  # Initialize cursor to avoid UnboundLocalError
+
+    unit = None  # Initialize unit variable to prevent UnboundLocalError
+
+    if request.method == 'GET':
+        # Fetch the selected unit for the current lecturer
+        try:
+            # Directly fetch the unit and check if it belongs to the current lecturer
+            query = """
+            SELECT units.id, units.unit_name 
+            FROM units
+            JOIN lecturer_unit_registrations 
+                ON units.id = lecturer_unit_registrations.unit_id
+            WHERE units.id = %s 
+            AND lecturer_unit_registrations.lecturer_id = %s
+            """
+            cursor = db.cursor(dictionary=True)
+            cursor.execute(query, (unit_id, lecturer_id))
+            unit = cursor.fetchone()
+
+            if not unit:
+                flash("Unit not found or you are not authorized to access it.", "error")
+                return redirect(url_for('main.viewattendanceunits'))  # Adjust redirect as needed
+
+            # Fetch attendance records for the specific unit and its students
+            attendance_query = """
+            SELECT 
+                attendance.id, 
+                student_details.admission_number, 
+                student_details.user_id AS student_id, 
+                attendance.unit_id,
+                attendance.class_date, 
+                attendance.hours_attended, 
+                attendance.total_hours,
+                attendance.attendance_status
+            FROM 
+                attendance
+            JOIN 
+                student_details ON attendance.student_id = student_details.id
+            WHERE 
+                attendance.unit_id = %s
+            """
+
+            cursor.execute(attendance_query, (unit_id,))
+            attendance_records = cursor.fetchall()
+
+        except Exception as e:
+            flash(f"An error occurred while fetching data: {str(e)}", "error")
+            attendance_records = []
+
+        finally:
+            if cursor:
+                cursor.close()
+
+        # Ensure that unit is always passed to the template
+        return render_template(
+            'LecturerModule/ManageAttendance.html',
+            unit=unit,
+            attendance_records=attendance_records,
+        )
+
+@main.route('/updateattendance', methods=['POST'])
+@login_required
+@role_required('2')
+def updateattendance():
+    db = get_db_connection()
+    lecturer_id = current_user.id
+
+    # Debugging: Print form data
+    print("Form Data:", request.form)
+
+    try:
+        attendance_id = request.form.get('attendance_id')
+        student_id = request.form.get('student_id')
+        unit_id = request.form.get('unit_id')  # Ensure unit_id is in the form
+        class_date = request.form.get('class_date')
+        hours_attended = int(request.form.get('hours_attended', 0))  # Default to 0 if missing
+        attendance_status = request.form.get('attendance_status')
+
+        # Validate required fields
+        if not attendance_id or not student_id or not unit_id or not attendance_status:
+            flash("Missing required fields. Please check your input.", "error")
+            return redirect(url_for('main.lecturer_dashboard'))
+
+        # Validate lecturer's access
+        query_validate_lecturer = """
+        SELECT 1
+        FROM lecturer_unit_registrations
+        WHERE lecturer_id = %s AND unit_id = %s
+        """
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(query_validate_lecturer, (lecturer_id, unit_id))
+        if not cursor.fetchone():
+            flash("Unauthorized action for this unit.", "error")
+            return redirect(url_for('main.lecturer_dashboard'))
+
+        # Update the attendance record
+        query_update = """
+        UPDATE attendance
+        SET hours_attended = %s, attendance_status = %s
+        WHERE id = %s
+        """
+        cursor.execute(query_update, (hours_attended, attendance_status, attendance_id))
+        db.commit()
+
+        flash("Attendance record updated successfully!", "success")
+        return redirect(url_for('main.editattendance', unit_id=unit_id))
+    except Exception as e:
+        flash(f"An error occurred: {e}", "error")
+        return redirect(url_for('main.lecturer_dashboard'))
+
+#grades       
+@main.route('/save_grades', methods=['POST'])
+@login_required
+@role_required('2')  # Assuming only lecturers (role ID 2) can submit grades
+def save_grades():
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+    try:
+        # Retrieve data from the form
+        unit_id = request.form.get('unit_id')
+        student_id = request.form.get('student_id')
+        cat1_mark = int(request.form.get('cat1_marks', 0))
+        cat2_mark = int(request.form.get('cat2_marks', 0))
+        assignment1_mark = int(request.form.get('ass1_marks', 0))
+        assignment2_mark = int(request.form.get('ass2_marks', 0))
+        exam_mark = int(request.form.get('exam_marks', 0))
+
+        # Validate marks
+        if any(mark < 0 or mark > 100 for mark in [cat1_mark, cat2_mark, assignment1_mark, assignment2_mark, exam_mark]):
+            flash("Marks must be between 0 and 100.", "error")
+            return redirect(url_for('main.lecturer_dashboard'))
+
+        # Ensure CATs and Assignments do not exceed 50
+        total_cats_and_assignments = cat1_mark + cat2_mark + assignment1_mark + assignment2_mark
+        if total_cats_and_assignments > 50:
+            flash("Total CATs and Assignments cannot exceed 50 marks.", "error")
+            return redirect(url_for('main.lecturer_dashboard'))
+
+        # Ensure total grade does not exceed 100
+        total_grade = total_cats_and_assignments + exam_mark
+        if total_grade > 100:
+            flash("Total grade cannot exceed 100 marks.", "error")
+            return redirect(url_for('main.lecturer_dashboard'))
+
+        # Check if the grades exist for the student and unit
+        existing_grades_query = """
+            SELECT * FROM grades WHERE student_id = %s AND unit_id = %s
+        """
+        cursor.execute(existing_grades_query, (student_id, unit_id))
+        existing_grades = cursor.fetchone()
+
+        if existing_grades:
+            # Update grades
+            update_query = """
+                UPDATE grades SET cat1_mark = %s, cat2_mark = %s, assignment1_mark = %s,
+                assignment2_mark = %s, exam_mark = %s WHERE student_id = %s AND unit_id = %s
+            """
+            cursor.execute(update_query, (cat1_mark, cat2_mark, assignment1_mark, assignment2_mark, exam_mark, total_grade, student_id, unit_id))
+            flash("Grades updated successfully.", "success")
+        else:
+            # Insert grades 
+            insert_query = """
+                INSERT INTO grades (student_id, unit_id, cat1_mark, cat2_mark, assignment1_mark, 
+                assignment2_mark, exam_mark, total_grade) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(insert_query, (student_id, unit_id, cat1_mark, cat2_mark, assignment1_mark, assignment2_mark, exam_mark, total_grade))
+            flash("Grades saved successfully.", "success")
+
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        flash(f"Error saving grades: {str(e)}", "error")
+    finally:
+        cursor.close()
+        db.close()
+
+    return redirect(url_for('main.lecturer_dashboard'))
 
 
 @main.route('/register_lecturer', methods=['GET', 'POST'])
@@ -635,6 +1037,15 @@ def lecturer_dashboard():
         'LecturerModule/LecturerDashboard.html',
         lecturer=lecturer_details  # Pass the lecturer object to the template
     )
+
+@main.route('/viewattendanceunits', methods=['GET', 'POST'])
+@login_required
+@role_required('2')  
+def viewattendanceunits():
+    db = get_db_connection()
+    lecturer_id = current_user.id
+    units = Unit.fetch_registered_units_for_lecturer(lecturer_id, db)
+    return render_template('LecturerModule/ViewAttendanceUnits.html', units=units)  
 
 
 @main.route('/mentor_dashboard')
@@ -778,108 +1189,6 @@ def inprogressunitslec():
         units=units
     )
 
-@main.route('/manageunitlec/<int:unit_id>', methods=['GET'])
-@login_required
-@role_required('2')  # Assuming '2' is lecturer
-def manageunitlec(unit_id):
-    db = get_db_connection()
-    lecturer_id = current_user.id
-
-    # Validate if lecturer has access to the unit
-    query = """
-    SELECT 1
-    FROM lecturer_unit_registrations
-    WHERE lecturer_id = %s AND unit_id = %s
-    """
-    cursor = db.cursor(dictionary=True)
-    cursor.execute(query, (lecturer_id, unit_id))
-    if not cursor.fetchone():
-        flash("Unauthorized access to this unit.", "error")
-        return redirect(url_for('main.lecturer_dashboard'))
-
-    # Fetch students for this specific unit
-    query_students = """
-    SELECT s.admission_number, s.course, su.student_id
-    FROM student_details s
-    JOIN student_unit_registrations su ON su.student_id = s.id
-    WHERE su.unit_id = %s
-    """
-    cursor.execute(query_students, (unit_id,))
-    students = cursor.fetchall()
-    cursor.close()
-
-    return render_template('LecturerModule/ManageUnit.html', students=students, unit_id=unit_id)
-
-@main.route('/attendance/<admission_number>', methods=['POST'])
-@login_required
-@role_required('2')  # Assuming '2' is lecturer
-def record_attendance(admission_number):
-    db = get_db_connection()
-    lecturer_id = current_user.id
-
-    # Get form data
-    student_id = request.form.get('student_id')
-    unit_id = request.form.get('unit_id')
-    class_date = request.form.get('class_date')
-    hours_attended = int(request.form.get('hours_attended'))
-    total_hours = int(request.form.get('total_hours'))
-    attendance_status = request.form.get('attendance_status')
-
-    # Validate lecturer's access to the unit
-    query_validate_lecturer = """
-    SELECT 1
-    FROM lecturer_unit_registrations
-    WHERE lecturer_id = %s AND unit_id = %s
-    """
-    cursor = db.cursor(dictionary=True)
-    cursor.execute(query_validate_lecturer, (lecturer_id, unit_id))
-    if not cursor.fetchone():
-        flash("Unauthorized action for this unit.", "error")
-        return redirect(url_for('main.lecturer_dashboard'))
-
-    # Check if the attendance for the same date, student, and unit already exists
-    query_check_duplicate = """
-    SELECT 1
-    FROM attendance
-    WHERE student_id = %s AND unit_id = %s AND class_date = %s
-    """
-    cursor.execute(query_check_duplicate, (student_id, unit_id, class_date))
-    if cursor.fetchone():
-        flash("Attendance for this date has already been recorded.", "error")
-        cursor.close()
-        return redirect(url_for('main.manageunitlec', student_id=student_id, unit_id=unit_id))
-
-    # Insert attendance record into the database
-    query_insert = """
-    INSERT INTO attendance (student_id, admission_number, unit_id, class_date, hours_attended, total_hours, attendance_status)
-    VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """
-    try:
-        cursor.execute(query_insert, (student_id, admission_number, unit_id, class_date, hours_attended, total_hours, attendance_status))
-        
-        # Update cumulative total_updated_hours
-        query_update_hours = """
-        UPDATE attendance
-        SET total_updated_hours = (
-            SELECT COALESCE(SUM(hours_attended), 0)
-            FROM attendance
-            WHERE student_id = %s AND unit_id = %s
-        )
-        WHERE student_id = %s AND unit_id = %s
-        """
-        cursor.execute(query_update_hours, (student_id, unit_id, student_id, unit_id))
-
-        db.commit()
-        flash("Attendance recorded successfully!", "success")
-    except Exception as e:
-        db.rollback()
-        flash(f"Error recording attendance: {str(e)}", "error")
-    finally:
-        cursor.close()
-
-    return redirect(url_for('main.manageunitlec', student_id=student_id, unit_id=unit_id))
-         
-  
 @main.route('/viewlecturers')
 @login_required
 @role_required('0')

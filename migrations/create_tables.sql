@@ -94,7 +94,6 @@ CREATE TABLE IF NOT EXISTS attendance (
     id INT AUTO_INCREMENT PRIMARY KEY,
     unit_id INT NOT NULL,
     student_id INT NOT NULL,
-    admission_number VARCHAR(255),
     class_date DATE NOT NULL,
     hours_attended INT NOT NULL,
     total_hours INT NOT NULL,
@@ -106,6 +105,24 @@ CREATE TABLE IF NOT EXISTS attendance (
     FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES student_details(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS grades (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    unit_id INT NOT NULL,
+    cat1_mark DECIMAL(5, 2),  
+    cat2_mark DECIMAL(5, 2),  
+    assignment1_mark DECIMAL(5, 2), 
+    assignment2_mark DECIMAL(5, 2),  
+    exam_mark DECIMAL(5, 2), 
+    total_grade DECIMAL(5, 2) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES student_details(id) ON DELETE CASCADE,
+    FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE
+);
+
+
+
 
 
 

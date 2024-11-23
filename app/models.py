@@ -151,14 +151,18 @@ class Student:
     def find_by_user_id(user_id, db):
         """Query student details by user ID, including the student's name."""
         query = """ 
-        SELECT u.full_name, sd. id, sd.user_id, sd.school, sd.course, sd.admission_number, sd.current_year, u.mobile_number, u.email, sd.year_intake, sd.international, sd.academic_status
+        SELECT u.full_name, sd.id, sd.user_id, sd.school, sd.course, sd.admission_number, 
+            sd.current_year, u.mobile_number, u.email, sd.year_intake, sd.international, 
+            sd.academic_status
         FROM student_details sd
         JOIN users u ON sd.user_id = u.id
         WHERE sd.user_id = %s
         """
         result = fetch_one(db, query, (user_id,))
+        
         if result:
-            return Student(
+            # Create a Student object with attributes from the result
+            student = Student(
                 id=result['id'],
                 user_id=result['user_id'],
                 school=result['school'],
@@ -172,7 +176,10 @@ class Student:
                 international=result['international'],
                 academic_status=result['academic_status']
             )
+            return student 
+        
         return None
+
     
     @staticmethod
     def find_by_student_id(db, user_id):
@@ -340,12 +347,6 @@ class Student:
                             'attendance_status': result[3]
                         })
             return attendance_records
-
-
-
-
-
-
   
     
 class Lecturer:
@@ -616,6 +617,45 @@ class Unit:
         """
         results = fetch_all(db, query, (lecturer_id,))
         return results
+    
+    @staticmethod
+    def get_unit_by_id(unit_id, db):
+        cursor = db.cursor(dictionary=True)
+        query = "SELECT id, name FROM units WHERE id = %s"
+        cursor.execute(query, (unit_id,))
+        return cursor.fetchone()
+    
+    @staticmethod
+    def fetch_unit_by_id_and_lecturer(unit_id, lecturer_id, db):
+        """
+        Fetch a unit by its ID, ensuring it belongs to the specified lecturer.
+        
+        :param unit_id: The ID of the unit.
+        :param lecturer_id: The ID of the lecturer.
+        :param db: The database connection object.
+        :return: The unit if found and belongs to the lecturer, None otherwise.
+        """
+        cursor = None
+        try:
+            query = """
+            SELECT units.id, units.name, units.description
+            FROM units
+            JOIN lecturer_unit_registrations 
+                ON units.id = lecturer_unit_registrations.unit_id
+            WHERE units.id = %s 
+            AND lecturer_unit_registrations.lecturer_id = %s
+            """
+            cursor = db.cursor(dictionary=True)
+            cursor.execute(query, (unit_id, lecturer_id))
+            unit = cursor.fetchone()
+            return unit  # Return unit if found, else None
+        except Exception as e:
+            print(f"Error fetching unit: {str(e)}")
+            return None
+        finally:
+            if cursor:
+                cursor.close()
+
 
     @staticmethod
     def register_unit_for_lecturer(lecturer_id, unit_id, db):
@@ -694,6 +734,17 @@ class Unit:
         """
         results = fetch_all(db, query, (admission_number,))
         return results
+    
+    @staticmethod
+    def fetch_by_unit_and_student(unit_id, admission_number, db):
+        cursor = db.cursor(dictionary=True)
+        query = """
+            SELECT * FROM attendance
+            WHERE unit_id = %s AND admission_number = %s
+        """
+        cursor.execute(query, (unit_id, admission_number))
+        result = cursor.fetchall()
+        return result
 
 class FacultyAdmin:
     def __init__(self, user_id, school, faculty, faculty_number, faculty_status, full_name=None, mobile_number=None, email=None):
@@ -754,13 +805,14 @@ class FacultyAdmin:
         return None
     
 class Attendance:
-    def __init__(self, unit_id, student_id, admission_number, class_date, hours_attended, total_hours, attendance_status):
+    def __init__(self, db, attendance_id, unit_id, student_id, admission_number, class_date, hours_attended, attendance_status):
+        self.db = db
+        self.attendance_id = attendance_id
         self.unit_id = unit_id
         self.student_id = student_id
         self.admission_number = admission_number
         self.class_date = class_date
         self.hours_attended = hours_attended
-        self.total_hours = total_hours
         self.attendance_status = attendance_status
 
     @staticmethod
@@ -795,5 +847,7 @@ class Attendance:
             db_connection.rollback()
         finally:
             cursor.close()
+
+
 
     
