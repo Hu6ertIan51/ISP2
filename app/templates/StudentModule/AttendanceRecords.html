@@ -7,48 +7,45 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://kit.fontawesome.com/aa11ee7bbf.js" crossorigin="anonymous"></script>
     <style>
-        /* Add this to your CSS file (e.g., style.css) */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 18px;
+            text-align: left;
+        }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
-    font-size: 18px;
-    text-align: left;
-}
+        table thead tr {
+            background-color: #6F251B; /* Match your sidebar theme color */
+            color: #ffffff;
+            text-align: left;
+        }
 
-table thead tr {
-    background-color: #6F251B; /* Match your sidebar theme color */
-    color: #ffffff;
-    text-align: left;
-}
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+        }
 
-table th, table td {
-    border: 1px solid #ddd;
-    padding: 12px;
-}
+        table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
 
-table tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
+        table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
 
-table tbody tr:hover {
-    background-color: #f1f1f1;
-}
+        table th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            background-color: #6F251B;
+            color: white;
+            text-transform: uppercase;
+        }
 
-table th {
-    padding-top: 12px;
-    padding-bottom: 12px;
-    background-color: #6F251B;
-    color: white;
-    text-transform: uppercase;
-}
-
-td {
-    vertical-align: middle;
-    text-align: center;
-}
-
+        td {
+            vertical-align: middle;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -88,16 +85,11 @@ td {
                     <h2>Attendance Information</h2>
                     {% if attendance_by_unit %}
                         {% for unit_name, records in attendance_by_unit.items() %}
-                            <h3>Unit: {{ unit_name }}</h3>
                             <table>
                                 <thead>
                                     <tr>
-                                        <td colspan="3" style="font-weight: bold;">{{ unit }} - Latest Absenteeism Percentage: 
-                                            {% if records %}
-                                                {{ records[0].absenteeism_percentage }}%
-                                            {% else %}
-                                                0%
-                                            {% endif %}
+                                        <td colspan="3" style="font-weight: bold;">
+                                            {{ unit_name }}
                                         </td>
                                     </tr>
                                     <tr>

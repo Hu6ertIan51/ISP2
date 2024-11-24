@@ -121,6 +121,16 @@ CREATE TABLE IF NOT EXISTS grades (
     FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS student_finalgrade (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    average_grade_1st_semester FLOAT,
+    average_grade_2nd_semester FLOAT,
+    FOREIGN KEY (student_id) REFERENCES student_details(id) ON DELETE CASCADE,
+    UNIQUE (student_id)
+);
+
+
 
 
 

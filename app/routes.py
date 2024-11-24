@@ -467,7 +467,7 @@ def student_attendance(unit_id=None):
             WHERE 
                 a.student_id = %s AND a.unit_id = %s
             ORDER BY 
-                a.class_date;
+                a.class_date DESC; -- Ensure latest records come first
             """
             attendance_results = fetch_all(db, query_attendance, (student_result['id'], unit_id))
         else:
@@ -487,12 +487,13 @@ def student_attendance(unit_id=None):
             WHERE 
                 a.student_id = %s
             ORDER BY 
-                u.unit_name, a.class_date;
+                u.unit_name, a.class_date DESC; -- Sort by unit and latest records
             """
             attendance_results = fetch_all(db, query_attendance, (student_result['id'],))
 
         # Group attendance records by unit
         attendance_by_unit = defaultdict(list)
+        latest_absenteeism = {}  # Store the latest absenteeism percentage for each unit
         for record in attendance_results:
             unit_name = record['unit_name']
             attendance_by_unit[unit_name].append({
@@ -502,10 +503,9 @@ def student_attendance(unit_id=None):
                 'attendance_status': record['attendance_status'],
                 'absenteeism_percentage': record['absenteeism_percentage'],
             })
-
-        # Sort attendance records by class_date (latest first) to show the most recent absenteeism
-        for unit in attendance_by_unit:
-            attendance_by_unit[unit].sort(key=lambda x: x['class_date'], reverse=True)
+            # Track the latest absenteeism percentage for each unit
+            if unit_name not in latest_absenteeism:
+                latest_absenteeism[unit_name] = record['absenteeism_percentage']
 
         # Convert to a regular dictionary for easier rendering
         attendance_by_unit = dict(attendance_by_unit)
@@ -514,6 +514,7 @@ def student_attendance(unit_id=None):
         return render_template(
             'StudentModule/AttendanceRecords.html',
             attendance_by_unit=attendance_by_unit,  # Pass grouped data
+            latest_absenteeism=latest_absenteeism,  # Pass latest absenteeism percentages
             student=student_result  # Pass the student details to the template
         )
 
@@ -1161,15 +1162,17 @@ def studentviewgrades(unit_id=None):
         flash(f"An error occurred: {str(e)}", "error")
         return redirect(url_for('main.student_dashboard'))
 
-
 @main.route('/progressreport', methods=['GET'])
-@login_required  # Ensure the user is logged in
+@login_required
 def progressreport(unit_id=None):
     db = get_db_connection()  # Get database connection
     try:
+        cursor = db.cursor(dictionary=True)  # Use a dictionary cursor for row data
+
         # Fetch the student record using current_user.id
         query_student = "SELECT * FROM student_details WHERE user_id = %s;"
-        student_result = fetch_one(db, query_student, (current_user.id,))
+        cursor.execute(query_student, (current_user.id,))
+        student_result = cursor.fetchone()
 
         if not student_result:
             flash("Student record not found.", "error")
@@ -1193,7 +1196,8 @@ def progressreport(unit_id=None):
         WHERE 
             g.student_id = %s AND u.semester_offered = 1;
         """
-        grades_results_1st_semester = fetch_all(db, query_grades_1st_semester, (student_result['id'],))
+        cursor.execute(query_grades_1st_semester, (student_result['id'],))
+        grades_results_1st_semester = cursor.fetchall()
 
         # Fetch grades for 2nd semester (semester_offered = 2)
         query_grades_2nd_semester = """
@@ -1213,7 +1217,8 @@ def progressreport(unit_id=None):
         WHERE 
             g.student_id = %s AND u.semester_offered = 2;
         """
-        grades_results_2nd_semester = fetch_all(db, query_grades_2nd_semester, (student_result['id'],))
+        cursor.execute(query_grades_2nd_semester, (student_result['id'],))
+        grades_results_2nd_semester = cursor.fetchall()
 
         # Function to calculate the average
         def calculate_average(grades_results):
@@ -1231,6 +1236,22 @@ def progressreport(unit_id=None):
         # Scale the averages to a 20-point scale
         scaled_average_1st_semester = (average_grade_1st_semester * 20) / 100
         scaled_average_2nd_semester = (average_grade_2nd_semester * 20) / 100
+
+        # Insert averages into student_finalgrade table
+        upsert_finalgrade_query = """
+        INSERT INTO student_finalgrade (student_id, average_grade_1st_semester, average_grade_2nd_semester)
+        VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            average_grade_1st_semester = VALUES(average_grade_1st_semester),
+            average_grade_2nd_semester = VALUES(average_grade_2nd_semester);
+        """
+        cursor.execute(
+            upsert_finalgrade_query,
+            (student_result['id'],
+            round(scaled_average_1st_semester, 2),
+            round(scaled_average_2nd_semester, 2))
+        )
+        db.commit() 
 
         # Group grades records by unit for both semesters
         grades_by_unit_1st_semester = defaultdict(list)
@@ -1264,7 +1285,6 @@ def progressreport(unit_id=None):
         grades_by_unit_1st_semester = dict(grades_by_unit_1st_semester)
         grades_by_unit_2nd_semester = dict(grades_by_unit_2nd_semester)
 
-
         # Render the grades page with the grouped data and average grade for both semesters
         return render_template(
             'StudentModule/ProgressReport.html',
@@ -1276,8 +1296,15 @@ def progressreport(unit_id=None):
         )
 
     except Exception as e:
+        db.rollback()
         flash(f"An error occurred: {str(e)}", "error")
+        print(f"An error occurred: {str(e)}")
         return redirect(url_for('main.student_dashboard'))
+
+    finally:
+        cursor.close()
+        db.close()
+
 
 
 
@@ -1597,7 +1624,6 @@ def OngoingUnits():
 @main.route('/success')
 def success_page():
     return render_template('Message.html')
-
 
 @main.route('/logout', methods=['POST'])  
 def logout():
