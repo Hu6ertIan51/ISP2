@@ -129,9 +129,10 @@
                     <a href="{{ url_for('main.inprogressunitslec') }}">In Progress Units</a></li>
                 <li><i class="fa-solid fa-clipboard" style="color:#6F251B;"></i>
                     <a href="{{url_for('main.viewattendanceunits')}}">Manage Attendance</a></li>
+                <li><i class="fa-solid fa-clipboard" style="color:#6F251B;"></i>
+                    <a href="{{url_for('main.viewgradesunits')}}">Manage Grades</a></li>
                 <li><i class="fa-solid fa-person" style="color:#6F251B;"></i>
                     <a href="">Mentor Information</a></li>
-            </ul>
         </div>
         <div class="main-content">
             <!-- Flash Messages -->
@@ -150,7 +151,7 @@
             </div>
 
             <div class="content-body">
-                <h2>Ongoing/Past Units</h2>
+                <h2>Manage Unit Information</h2>
                 <table id="studentTable">
                     <thead>
                         <tr>
@@ -163,9 +164,9 @@
                         {% if students %}
                             {% for student in students %}
                                 <tr>
-                                    <td>{{ student.admission_number }}</td>
-                                    <td>{{ student.course }}</td>
-                                    <td>
+                                    <td style="width: 20px">{{ student.admission_number }}</td>
+                                    <td style="width: 20px">{{ student.course }}</td>
+                                    <td style="width: 5px">
                                         <button class="attendance-btn" onclick="openModal('attendanceModal-{{ student.admission_number }}')">
                                             <i class="fa-solid fa-book"></i> Attendance
                                         </button>
@@ -222,8 +223,8 @@
                                                 <form action="{{url_for('main.save_grades')}}" method="POST">
                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                                                    <label for="">Unit ID:</label>
-                                                    <input type="number" name="unit_id" value="{{ unit_id }}" readonly>
+                                                    
+                                                    <input type="number" name="unit_id" value="{{ unit_id }}" readonly hidden>
                                         
                                                     <!-- Populate with dynamic student details -->
                                                     <label for="admissionNumber">Admission Number:</label>

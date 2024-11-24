@@ -31,7 +31,6 @@ def role_required(role):
         return wrapped_function
     return decorator
 
-
 @main.route('/login', methods=['GET', 'POST'])
 def login_user_view():
     if request.method == 'POST':
@@ -924,6 +923,7 @@ def save_grades():
         """
         cursor.execute(existing_grades_query, (student_id, unit_id))
         existing_grades = cursor.fetchone()
+        flash(f"Grades already exist")
 
         if existing_grades:
             # Update grades
@@ -950,8 +950,220 @@ def save_grades():
         cursor.close()
         db.close()
 
-    return redirect(url_for('main.lecturer_dashboard'))
+    return redirect(url_for('main.manageunitslec', unit_id=unit_id))
 
+
+@main.route('/viewgradesunits', methods=['GET', 'POST'])
+@login_required
+@role_required('2')  # Student role
+def viewgradesunits():
+    db = get_db_connection()
+    lecturer_id = current_user.id
+    units = Unit.fetch_registered_units_for_lecturer(lecturer_id, db)
+    return render_template('LecturerModule/ViewGradesUnits.html', units=units)  
+    
+
+@main.route('/editgrades/<int:unit_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('2')  # Lecturer role
+def editgrades(unit_id):
+    db = get_db_connection()
+    lecturer_id = current_user.id
+    cursor = None  # Initialize cursor to avoid UnboundLocalError
+
+    unit = None  # Initialize unit variable to prevent UnboundLocalError
+
+    if request.method == 'GET':
+        try:
+            # Fetch the unit and check if it belongs to the current lecturer
+            query = """
+            SELECT units.id, units.unit_name
+            FROM units
+            JOIN lecturer_unit_registrations 
+                ON units.id = lecturer_unit_registrations.unit_id
+            WHERE units.id = %s 
+            AND lecturer_unit_registrations.lecturer_id = %s
+            """
+            cursor = db.cursor(dictionary=True)
+            cursor.execute(query, (unit_id, lecturer_id))
+            unit = cursor.fetchone()
+
+            if not unit:
+                flash("Unit not found or you are not authorized to access it.", "error")
+                return redirect(url_for('main.viewgrades'))  # Adjust redirect as needed
+
+            # Fetch grade records for the specific unit and its students
+            grades_query = """
+            SELECT 
+                grades.id AS grade_id,
+                student_details.admission_number,
+                student_details.id AS student_id,
+                grades.unit_id,
+                grades.cat1_mark,
+                grades.cat2_mark,
+                grades.assignment1_mark,
+                grades.assignment2_mark,
+                grades.exam_mark,
+                grades.total_grade
+            FROM 
+                grades
+            JOIN 
+                student_details ON grades.student_id = student_details.id
+            WHERE 
+                grades.unit_id = %s
+            """
+            cursor.execute(grades_query, (unit_id,))
+            grades_records = cursor.fetchall()
+
+        except Exception as e:
+            flash(f"An error occurred while fetching data: {str(e)}", "error")
+            grades_records = []
+
+        finally:
+            if cursor:
+                cursor.close()
+
+        # Render the template with grades data
+        return render_template(
+            'LecturerModule/ManageGrades.html',
+            unit=unit,
+            grades_records=grades_records,
+        )
+
+    elif request.method == 'POST':
+        try:
+            grade_id = request.form.get('grade_id')
+            cat1_mark = request.form.get('cat1_marks', 0)
+            cat2_mark = request.form.get('cat2_marks', 0)
+            assignment1_mark = request.form.get('ass1_marks', 0)
+            assignment2_mark = request.form.get('ass2_marks', 0)
+            exam_mark = request.form.get('exam_marks', 0)
+
+            # Calculate total grade
+            total_grade = (
+                float(cat1_mark) +
+                float(cat2_mark) +
+                float(assignment1_mark) +
+                float(assignment2_mark) +
+                float(exam_mark)
+            ) 
+
+            # Update the grades record
+            update_query = """
+            UPDATE grades 
+            SET 
+                cat1_mark = %s, 
+                cat2_mark = %s, 
+                assignment1_mark = %s, 
+                assignment2_mark = %s, 
+                exam_mark = %s, 
+                total_grade = %s
+            WHERE 
+                id = %s
+            """
+            cursor = db.cursor()
+            cursor.execute(update_query, (
+                cat1_mark, cat2_mark, assignment1_mark, assignment2_mark, exam_mark, total_grade, grade_id
+            ))
+            db.commit()
+
+            flash("Grade updated successfully!", "success")
+
+        except Exception as e:
+            db.rollback()
+            flash(f"An error occurred while updating the grade: {str(e)}", "error")
+
+        finally:
+            if cursor:
+                cursor.close()
+
+        return redirect(url_for('main.editgrades', unit_id=unit_id))
+
+#student module
+
+
+@main.route('/student/grades', methods=['GET'])
+@main.route('/student/grades/<int:unit_id>', methods=['GET'])  # Accept unit_id from URL
+@login_required
+@role_required('1')  # Student role
+def studentviewgrades(unit_id=None):
+    db = get_db_connection()
+    try:
+        # Fetch the student record using current_user.id
+        query_student = "SELECT * FROM student_details WHERE user_id = %s;"
+        student_result = fetch_one(db, query_student, (current_user.id,))
+
+        if not student_result:
+            flash("Student record not found.", "error")
+            return redirect(url_for('main.index'))
+
+        # If a unit_id is provided, fetch grades for that unit
+        if unit_id:
+            query_grades = """
+            SELECT 
+                u.unit_name, 
+                g.cat1_mark, 
+                g.cat2_mark, 
+                g.assignment1_mark, 
+                g.assignment2_mark, 
+                g.exam_mark, 
+                g.total_grade
+            FROM 
+                grades g
+            JOIN 
+                units u ON g.unit_id = u.id
+            WHERE 
+                g.student_id = %s AND g.unit_id = %s;
+            """
+            grades_results = fetch_all(db, query_grades, (student_result['id'], unit_id))
+        else:
+            # If no unit_id is provided, fetch all grades for the student
+            query_grades = """
+            SELECT 
+                u.unit_name, 
+                g.cat1_mark, 
+                g.cat2_mark, 
+                g.assignment1_mark, 
+                g.assignment2_mark, 
+                g.exam_mark, 
+                g.total_grade
+            FROM 
+                grades g
+            JOIN 
+                units u ON g.unit_id = u.id
+            WHERE 
+                g.student_id = %s;
+            """
+            grades_results = fetch_all(db, query_grades, (student_result['id'],))
+ 
+        # Group grades records by unit
+        grades_by_unit = defaultdict(list)
+        for record in grades_results:
+            unit_name = record['unit_name']
+            grades_by_unit[unit_name].append({
+                'cat1_mark': record['cat1_mark'],
+                'cat2_mark': record['cat2_mark'],
+                'assignment1_mark': record['assignment1_mark'],
+                'assignment2_mark': record['assignment2_mark'],
+                'exam_mark': record['exam_mark'],
+                'total_grade': record['total_grade'],
+            })
+
+        # Convert to a regular dictionary for easier rendering
+        grades_by_unit = dict(grades_by_unit)
+
+        # Render the grades page
+        return render_template(
+            'StudentModule/GradesRecords.html',
+            grades_by_unit=grades_by_unit,  # Pass grouped data
+            student=student_result  # Pass the student details to the template
+        )
+
+    except Exception as e:
+        flash(f"An error occurred: {str(e)}", "error")
+        return redirect(url_for('main.student_dashboard'))
+
+#end of grades
 
 @main.route('/register_lecturer', methods=['GET', 'POST'])
 @login_required

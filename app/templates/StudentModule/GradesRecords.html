@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSense Student Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://kit.fontawesome.com/aa11ee7bbf.js" crossorigin="anonymous"></script>
+    <style>
+        /* Add this to your CSS file (e.g., style.css) */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 18px;
+            text-align: left;
+        }
+
+        table thead tr {
+            background-color: #6F251B; /* Match your sidebar theme color */
+            color: #ffffff;
+            text-align: left;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        table th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            background-color: #6F251B;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        td {
+            vertical-align: middle;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="icon-container">
+        <form action="{{ url_for('main.logout') }}" method="POST" id="logout-form" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="logout-btn" onclick="confirmLogout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+            </button>
+        </form>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <h2>EduSense</h2>
+            <p>Student Navigation Panel</p>
+            <ul>
+                <li><i class="fa-solid fa-house" style="color: #6F251B;" class="active"></i>
+                    <a href="{{ url_for('main.student_dashboard') }}">Dashboard</a></li>
+                <li><i class="fa-brands fa-flipboard" style="color:#6F251B;"></i>    
+                    <a href="{{ url_for('main.available_units') }}">Unit Registration</a></li>
+                <li><i class="fa-brands fa-flipboard" style="color:#6F251B;"></i>    
+                    <a href="{{ url_for('main.inprogressunits') }}">In Progress Units</a></li>
+                <li><i class="fa-solid fa-person" style="color:#6F251B;"></i>
+                    <a href="">Mentor Information</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <section>
+                <div class="attendance-section">
+                    <h2>Student Attendance Information</h2>
+                </div>
+                <!-- Grades Section -->
+                <div class="grades-section">
+                    <h2>Student Grades Information</h2>
+                    {% if grades_by_unit %}
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Unit</th>
+                                    <th>CAT 1</th>
+                                    <th>CAT 2</th>
+                                    <th>Assignment 1</th>
+                                    <th>Assignment 2</th>
+                                    <th>Exam</th>
+                                    <th>Total Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for unit_name, grades in grades_by_unit.items() %}
+                                    {% for grade in grades %}
+                                        <tr>
+                                            <td>{{ unit_name }}</td>
+                                            <td>{{ grade.cat1_mark }}</td>
+                                            <td>{{ grade.cat2_mark }}</td>
+                                            <td>{{ grade.assignment1_mark }}</td>
+                                            <td>{{ grade.assignment2_mark }}</td>
+                                            <td>{{ grade.exam_mark }}</td>
+                                            <td>{{ grade.total_grade }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>No grade records found.</p>
+                    {% endif %}
+                </div>                
+            </section>
+            <footer>
+                <p>&copy; 2024 EduSense</p>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>

@@ -156,21 +156,27 @@
                     <thead>
                         <tr>
                             <th>Admission Number</th>
-                            <th>Class Date</th>
-                            <th>Hours Attended</th>
-                            <th>Status</th>
+                            <th>CAT 1</th>
+                            <th>CAT 2</th>
+                            <th>Assignment 1</th>
+                            <th>Assignment 2</th>
+                            <th>Exam</th>
+                            <th>Total Grade</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for record in attendance_records %}
+                        {% for record in grades_records %}
                         <tr>
                             <td>{{ record.admission_number }}</td>
-                            <td>{{ record.class_date }}</td>
-                            <td>{{ record.hours_attended }}</td>
-                            <td>{{ record.attendance_status }}</td>
+                            <td>{{ record.cat1_mark }}</td>
+                            <td>{{ record.cat2_mark }}</td>
+                            <td>{{ record.assignment1_mark }}</td>
+                            <td>{{ record.assignment2_mark }}</td>
+                            <td>{{ record.exam_mark }}</td>
+                            <td>{{ record.total_grade }}</td>
                             <td>
-                                <button class="logout-btn" onclick="openModal('editAttendanceModal-{{ record.id }}')">
+                                <button class="logout-btn" onclick="openModal('editGradeModal-{{ record.grade_id }}')">
                                     <i class="fa-solid fa-pen-to-square"></i> Edit
                                 </button>
                             </td>
@@ -182,29 +188,31 @@
         </div>
     </div>
 
-    <!-- Attendance Edit Modal -->
-    {% for record in attendance_records %}
-    <div id="editAttendanceModal-{{ record.id }}" class="modal">
+    {% for record in grades_records %}
+    <div id="editGradeModal-{{ record.grade_id }}" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal('editAttendanceModal-{{ record.id }}')">&times;</span>
-            <h3>Edit Attendance</h3>
-            <form action="{{ url_for('main.updateattendance', unit_id=unit.id) }}" method="POST">
+            <span class="close" onclick="closeModal('editGradeModal-{{ record.grade_id }}')">&times;</span>
+            <h3>Edit Grades for {{ record.admission_number }}</h3>
+            <form action="{{ url_for('main.editgrades', unit_id=unit.id) }}" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="unit_id" value="{{ unit.id }}">
-                <input type="hidden" name="attendance_id" value="{{ record.id }}">
-                <input type="hidden" name="student_id" value="{{ record.student_id }}">
-                <input type="hidden" name="class_date" value="{{ record.class_date }}">
+                <input type="hidden" name="grade_id" value="{{ record.grade_id }}">
 
-                <label for="hours_attended">Hours Attended:</label>
-                <input type="number" name="hours_attended" id="hours_attended" value="{{ record.hours_attended }}" min="0" max="2" required>
+                <label for="cat1_marks">CAT 1 Marks:</label>
+                <input type="number" name="cat1_marks" value="{{ record.cat1_mark }}" min="0" max="100" required>
 
-                <label for="attendance_status">Attendance Status:</label>
-                <select name="attendance_status" id="attendance_status" required>
-                    <option value="Present" {% if record.attendance_status == 'Present' %}selected{% endif %}>Present</option>
-                    <option value="Absent" {% if record.attendance_status == 'Absent' %}selected{% endif %}>Absent</option>
-                </select>
+                <label for="cat2_marks">CAT 2 Marks:</label>
+                <input type="number" name="cat2_marks" value="{{ record.cat2_mark }}" min="0" max="100" required>
 
-                <button type="submit">Update Attendance</button>
+                <label for="ass1_marks">Assignment 1 Marks:</label>
+                <input type="number" name="ass1_marks" value="{{ record.assignment1_mark }}" min="0" max="100" required>
+
+                <label for="ass2_marks">Assignment 2 Marks:</label>
+                <input type="number" name="ass2_marks" value="{{ record.assignment2_mark }}" min="0" max="100" required>
+
+                <label for="exam_marks">Exam Marks:</label>
+                <input type="number" name="exam_marks" value="{{ record.exam_mark }}" min="0" max="100" required>
+
+                <button type="submit">Update Grade</button>
             </form>
         </div>
     </div>

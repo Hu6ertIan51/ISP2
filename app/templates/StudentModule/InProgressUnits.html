@@ -232,7 +232,7 @@
                                         <td>{{ unit.year_offered }}</td>
                                         <td>{{ unit.semester_offered }}</td>
                                         <td>
-                                            <button type="button" class="view-grades-btn" onclick="">
+                                            <button type="button" class="view-grades-btn" onclick="window.location.href='{{url_for('main.studentviewgrades', unit_id=unit.id) }}'">
                                                 <i class="fa-solid fa-book" style="color:#ccc;"></i> Grades
                                             </button>                                            
                                             <button type="button" class="view-attendance-btn" onclick="window.location.href='{{ url_for('main.student_attendance', unit_id=unit.id) }}'">
