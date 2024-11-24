@@ -47,12 +47,6 @@
             vertical-align: middle;
             text-align: center;
         }
-
-        footer {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-        }
     </style>
 </head>
 <body>
@@ -86,25 +80,32 @@
                 <div class="attendance-section">
                     <h2>Student Progress Information</h2>
                 </div>
-                <!-- Units Section -->
+                <!-- Grades Section -->
                 <div class="grades-section">
-                    <h2>Units</h2>
-                    {% for unit_name, grades in grades_by_unit.items() %}
-                        <h3>{{ unit_name }}</h3>
-                        <table id="studentTable">
-                            <thead>
-                                <tr>
-                                    <th>CAT 1</th>
-                                    <th>CAT 2</th>
-                                    <th>Assignment 1</th>
-                                    <th>Assignment 2</th>
-                                    <th>Exam</th>
-                                    <th>Total Grade</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                    <h2>Average Grades</h2>
+                    <p>1. Average Grade for 1st Semester (Out of 20): {{ average_grade_1st_semester }}</p>
+                    <p>2. Average Grade for 2nd Semester (Out of 20): {{ average_grade_2nd_semester }}</p>
+                    <!-- 1st Semester Grades Table -->
+                    <h3>1st Semester Grades</h3>
+                    <table id="studentTable1stSemester">
+                        <thead>
+                            <tr>
+                                <th>Unit</th>
+                                <th>Semester Offered</th>
+                                <th>CAT 1</th>
+                                <th>CAT 2</th>
+                                <th>Assignment 1</th>
+                                <th>Assignment 2</th>
+                                <th>Exam</th>
+                                <th>Total Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for unit_name, grades in grades_by_unit_1st_semester.items() %}
                                 {% for grade in grades %}
                                     <tr>
+                                        <td>{{ unit_name }}</td>
+                                        <td>{{ grade.semester_offered }}</td>
                                         <td>{{ grade.cat1_mark }}</td>
                                         <td>{{ grade.cat2_mark }}</td>
                                         <td>{{ grade.assignment1_mark }}</td>
@@ -113,9 +114,42 @@
                                         <td>{{ grade.total_grade }}</td>
                                     </tr>
                                 {% endfor %}
-                            </tbody>
-                        </table>
-                    {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <!-- 2nd Semester Grades Table -->
+                    <h3>2nd Semester Grades</h3>
+                    <table id="studentTable2ndSemester">
+                        <thead>
+                            <tr>
+                                <th>Unit</th>
+                                <th>Semester Offered</th>
+                                <th>CAT 1</th>
+                                <th>CAT 2</th>
+                                <th>Assignment 1</th>
+                                <th>Assignment 2</th>
+                                <th>Exam</th>
+                                <th>Total Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for unit_name, grades in grades_by_unit_2nd_semester.items() %}
+                                {% for grade in grades %}
+                                    <tr>
+                                        <td>{{ unit_name }}</td>
+                                        <td>{{ grade.semester_offered }}</td>
+                                        <td>{{ grade.cat1_mark }}</td>
+                                        <td>{{ grade.cat2_mark }}</td>
+                                        <td>{{ grade.assignment1_mark }}</td>
+                                        <td>{{ grade.assignment2_mark }}</td>
+                                        <td>{{ grade.exam_mark }}</td>
+                                        <td>{{ grade.total_grade }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>                
             </section>
             <footer>

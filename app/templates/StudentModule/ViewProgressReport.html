@@ -3,15 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduSense Student Dashboard</title>
+    <title>EduSense Admin Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://kit.fontawesome.com/aa11ee7bbf.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="icon-container">
-        <button class="logout-btn">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i>Log Out
-        </button>
+    <div class="icon-container">     
+        <form action="{{ url_for('main.logout') }}" method="POST" id="logout-form" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="button" class="logout-btn" onclick="confirmLogout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+            </button>
+        </form>
+        
+        <script>
+            function confirmLogout() {
+                if (confirm("Are you sure you want to log out?")) {
+                    document.getElementById("logout-form").submit();
+                }
+            }
+        </script>        
     </div>
     <div class="container">
         <div class="sidebar">
@@ -31,31 +42,20 @@
             </ul>
         </div>
         <div class="main-content">
-            <section>
-                <div class="attendance-section">
-                    <h2>Student Mentor Information</h2>
-                </div>
-                <div class="academic-info">
-                    <h2>Mentor Information</h2>
-                    <table>
-                        <tr>
-                            <td><strong>Full Name:</strong></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Email Address:</strong></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Phone Number:</strong></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Available hours:</strong></td>
-                            <td></td>
-                        </tr>
-                    </table>
-                </div>
+            <div class="spaceforbanner">
+                <h2>Student Module</h2>
+            </div>
+                <div class="personal-info">
+                    <h2>View Progress Report</h2>
+                <div class="profile-info">
+
+                    <div class="button-container">
+                        <button class="analytics-btn" onclick="window.location.href='{{url_for('main.progressreport')}}'">
+                            <i class="fa-solid fa-book"></i> View Progress Report 
+                        </button>
+                    </div>
+                    
+            </div>
             </section>
             <footer>
                 <p>&copy; 2024</p>

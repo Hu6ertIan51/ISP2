@@ -1080,8 +1080,6 @@ def editgrades(unit_id):
         return redirect(url_for('main.editgrades', unit_id=unit_id))
 
 #student module
-
-
 @main.route('/student/grades', methods=['GET'])
 @main.route('/student/grades/<int:unit_id>', methods=['GET'])  # Accept unit_id from URL
 @login_required
@@ -1162,6 +1160,134 @@ def studentviewgrades(unit_id=None):
     except Exception as e:
         flash(f"An error occurred: {str(e)}", "error")
         return redirect(url_for('main.student_dashboard'))
+
+
+@main.route('/progressreport', methods=['GET'])
+@login_required  # Ensure the user is logged in
+def progressreport(unit_id=None):
+    db = get_db_connection()  # Get database connection
+    try:
+        # Fetch the student record using current_user.id
+        query_student = "SELECT * FROM student_details WHERE user_id = %s;"
+        student_result = fetch_one(db, query_student, (current_user.id,))
+
+        if not student_result:
+            flash("Student record not found.", "error")
+            return redirect(url_for('main.index'))
+
+        # Fetch grades for 1st semester (semester_offered = 1)
+        query_grades_1st_semester = """
+        SELECT 
+            u.unit_name, 
+            u.semester_offered,
+            g.cat1_mark, 
+            g.cat2_mark, 
+            g.assignment1_mark, 
+            g.assignment2_mark, 
+            g.exam_mark, 
+            g.total_grade
+        FROM 
+            grades g
+        JOIN 
+            units u ON g.unit_id = u.id
+        WHERE 
+            g.student_id = %s AND u.semester_offered = 1;
+        """
+        grades_results_1st_semester = fetch_all(db, query_grades_1st_semester, (student_result['id'],))
+
+        # Fetch grades for 2nd semester (semester_offered = 2)
+        query_grades_2nd_semester = """
+        SELECT 
+            u.unit_name, 
+            u.semester_offered,
+            g.cat1_mark, 
+            g.cat2_mark, 
+            g.assignment1_mark, 
+            g.assignment2_mark, 
+            g.exam_mark, 
+            g.total_grade
+        FROM 
+            grades g
+        JOIN 
+            units u ON g.unit_id = u.id
+        WHERE 
+            g.student_id = %s AND u.semester_offered = 2;
+        """
+        grades_results_2nd_semester = fetch_all(db, query_grades_2nd_semester, (student_result['id'],))
+
+        # Function to calculate the average
+        def calculate_average(grades_results):
+            total_sum = 0
+            total_count = 0
+            for record in grades_results:
+                total_sum += record['total_grade']
+                total_count += 1
+            return total_sum / total_count if total_count > 0 else 0
+
+        # Calculate averages for both semesters
+        average_grade_1st_semester = calculate_average(grades_results_1st_semester)
+        average_grade_2nd_semester = calculate_average(grades_results_2nd_semester)
+
+        # Scale the averages to a 20-point scale
+        scaled_average_1st_semester = (average_grade_1st_semester * 20) / 100
+        scaled_average_2nd_semester = (average_grade_2nd_semester * 20) / 100
+
+        # Group grades records by unit for both semesters
+        grades_by_unit_1st_semester = defaultdict(list)
+        grades_by_unit_2nd_semester = defaultdict(list)
+
+        for record in grades_results_1st_semester:
+            unit_name = record['unit_name']
+            grades_by_unit_1st_semester[unit_name].append({
+                'semester_offered': record['semester_offered'],
+                'cat1_mark': record['cat1_mark'],
+                'cat2_mark': record['cat2_mark'],
+                'assignment1_mark': record['assignment1_mark'],
+                'assignment2_mark': record['assignment2_mark'],
+                'exam_mark': record['exam_mark'],
+                'total_grade': record['total_grade'],
+            })
+
+        for record in grades_results_2nd_semester:
+            unit_name = record['unit_name']
+            grades_by_unit_2nd_semester[unit_name].append({
+                'semester_offered': record['semester_offered'],
+                'cat1_mark': record['cat1_mark'],
+                'cat2_mark': record['cat2_mark'],
+                'assignment1_mark': record['assignment1_mark'],
+                'assignment2_mark': record['assignment2_mark'],
+                'exam_mark': record['exam_mark'],
+                'total_grade': record['total_grade'],
+            })
+
+        # Convert to regular dictionaries for easier rendering
+        grades_by_unit_1st_semester = dict(grades_by_unit_1st_semester)
+        grades_by_unit_2nd_semester = dict(grades_by_unit_2nd_semester)
+
+
+        # Render the grades page with the grouped data and average grade for both semesters
+        return render_template(
+            'StudentModule/ProgressReport.html',
+            grades_by_unit_1st_semester=grades_by_unit_1st_semester,
+            grades_by_unit_2nd_semester=grades_by_unit_2nd_semester,
+            student=student_result,
+            average_grade_1st_semester=round(scaled_average_1st_semester, 2),
+            average_grade_2nd_semester=round(scaled_average_2nd_semester, 2)
+        )
+
+    except Exception as e:
+        flash(f"An error occurred: {str(e)}", "error")
+        return redirect(url_for('main.student_dashboard'))
+
+
+
+  # Optional error page
+
+@main.route('/viewprogressreport', methods=['GET']) 
+@login_required
+@role_required('1')  # Ensure only students access this
+def viewprogressreport():
+    return render_template('StudentModule/ViewProgressReport.html')
 
 #end of grades
 
