@@ -14,4 +14,4 @@ def setup_database():
 
 if __name__ == '__main__':
     setup_database()  # Set up the database before running the app
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000) 

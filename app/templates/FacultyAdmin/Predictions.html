@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSense Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://kit.fontawesome.com/aa11ee7bbf.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="icon-container">     
+        <form action="{{ url_for('main.logout') }}" method="POST" id="logout-form" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="button" class="logout-btn" onclick="confirmLogout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+            </button>
+        </form>
+        
+        <script>
+            function confirmLogout() {
+                if (confirm("Are you sure you want to log out?")) {
+                    document.getElementById("logout-form").submit();
+                }
+            }
+        </script>        
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <h2>EduSense</h2>
+            <p>Student Navigation Panel</p>
+            <ul>
+                <li><i class="fa-solid fa-house" style="color: #6F251B;" class = "active"></i>
+                    <a href="{{url_for('main.admin_dashboard')}}">Faculty Admin Dashboard</a></li>
+                <li><i class="fa-regular fa-user" style="color: #6F251B"></i></i>
+                    <a href="">Manage User Accounts</a></li>
+                <li><i class="fa-solid fa-book" style="color:#6F251B;"></i>
+                    <a href="{{url_for('main.famanagecourse')}}">Manage Course Information</a></li>
+                <li><i class="fa-regular fa-bell" style="color:#6F251B;"></i></i>
+                    <a href="{{url_for('main.viewpredictions')}}">View Predictions</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="spaceforbanner">
+                <h2>Student Module</h2>
+            </div>
+                <div class="personal-info">
+                    <h2>View Progress Report</h2>
+                <div class="profile-info">
+
+                    <div class="button-container">
+                        <button class="analytics-btn" onclick="window.location.href='{{url_for('main.studentpredictions')}}'">
+                            <i class="fa-solid fa-book"></i> View Predictions 
+                        </button>
+                    </div>
+                    
+            </div>
+            </section>
+            <footer>
+                <p>&copy; 2024</p>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>

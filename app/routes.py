@@ -5,6 +5,8 @@ from .db import get_db_connection, fetch_one, fetch_all, execute_query
 from functools import wraps
 from datetime import datetime
 from collections import defaultdict 
+import pickle
+import pandas as pd
 
 main = Blueprint('main', __name__)
 
@@ -1629,6 +1631,88 @@ def success_page():
 def logout():
     logout_user()  # Logs out the current user
     return redirect(url_for('main.login_page'))  # Redirect to login page
- 
 
+#ML integration
+with open('/Users/ianomondi/Desktop/UNI/4th Year/IS Project 2/SRCCODE/ISP2/app/model/Random Forest Model.pkl', 'rb') as model_file:
+    model = pickle.load(model_file)
+
+@main.route('/dummy', methods=['GET'])
+def dummy():
+    dummydata = {
+    'Curricular units 1st sem (grade)': [7],
+    'Curricular units 2nd sem (grade)': [7],
+    'International': [0]
+    }
+    result = model.predict(pd.DataFrame(dummydata)) 
+    return str(result[0])  
  
+@main.route('/viewpredictions', methods=['POST', 'GET'])
+@login_required
+@role_required('4')  
+def viewpredictions():
+    return render_template('FacultyAdmin/Predictions.html')
+
+@main.route('/predict', methods=['POST', 'GET'])
+@login_required
+@role_required('4')
+def studentpredictions():
+    db = get_db_connection()
+    try:
+        cursor = db.cursor(dictionary=True)
+        
+        # Fetch all students' data including full name and course
+        query = """
+        SELECT 
+            sf.student_id,
+            sf.average_grade_1st_semester AS grade_1st_sem,
+            sf.average_grade_2nd_semester AS grade_2nd_sem,
+            sd.international,
+            sd.course,
+            u.full_name
+        FROM 
+            student_finalgrade sf
+        JOIN 
+            student_details sd ON sf.student_id = sd.id
+        JOIN 
+            Users u ON sd.user_id = u.id;
+        """
+        cursor.execute(query)
+        students_data = cursor.fetchall()
+        
+        # Prepare data for predictions
+        predictions = []
+        for student in students_data:
+            input_data = {
+                'Curricular units 1st sem (grade)': [student['grade_1st_sem']],
+                'Curricular units 2nd sem (grade)': [student['grade_2nd_sem']],
+                'International': [1 if student['international'].lower() == 'yes' else 0]
+            }
+            
+            # Make prediction using the model
+            result = model.predict(pd.DataFrame(input_data))
+            
+            # Convert prediction to string
+            prediction_str = "Graduate" if result[0] == 1 else "Dropout"
+            
+            predictions.append({
+                'student_id': student['student_id'],
+                'full_name': student['full_name'],
+                'course': student['course'],
+                'grade_1st_sem': student['grade_1st_sem'],
+                'grade_2nd_sem': student['grade_2nd_sem'],
+                'international': student['international'],
+                'prediction': prediction_str
+            })
+        
+        # Render predictions in the template
+        return render_template('FacultyAdmin/StudentPredictions.html', predictions=predictions)
+
+    except Exception as e:
+        db.rollback()
+        flash(f"An error occurred: {str(e)}", "error")
+        print(f"An error occurred: {str(e)}")
+        return redirect(url_for('main.login_page'))
+    finally:
+        cursor.close()
+        db.close()
+
