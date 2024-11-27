@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSense Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://kit.fontawesome.com/aa11ee7bbf.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Ensure container is using flexbox for layout without sidebar */
+        .container {
+            display: block;
+            padding: 20px;
+        }
+
+        /* Main content area */
+        .main-content {
+            padding: 20px;
+        }
+
+        /* Custom CSS to reduce the size of the chart */
+        #analyticsChart {
+            width: 250px !important;
+            height: 250px !important;
+            display: block; /* Ensures chart is a block element */
+            margin: 20px auto; /* Centers the chart horizontally with some space around it */
+        }
+
+        .profile-info {
+            display: block;
+        }
+
+        /* Adjust logout button position */
+        .icon-container {
+            margin-top: 40px; /* Move the logout button lower */
+        }
+
+        .logout-btn {
+            background-color: #3E4961; /* Example button background color */
+            color: #3E4961; /* Button text color */
+            padding: 10px 20px; /* Add padding for better button appearance */
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .logout-btn:hover {
+            background-color: #ffff; /* Darker color on hover */
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Logout Section -->
+    <div class="icon-container">
+        <form action="{{ url_for('main.logout') }}" method="POST" id="logout-form" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="button" class="logout-btn" onclick="confirmLogout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+            </button>
+        </form>
+
+        <script>
+            function confirmLogout() {
+                if (confirm("Are you sure you want to log out?")) {
+                    document.getElementById("logout-form").submit();
+                }
+            }
+        </script>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Main Content Section -->
+        <div class="main-content">
+            <!-- Analytics Section -->
+            <div class="profile-info">
+                <div class="container">
+                    <h2>Student Analytics</h2>
+                    <canvas id="analyticsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Section -->
+        <footer>
+            <p>&copy; 2024 EduSense</p>
+        </footer>
+    </div>
+
+    <script>
+        // Data passed from Flask
+        const analyticsData = {{ analytics_data | tojson }};
+        
+        // Prepare data for Chart.js
+        const data = {
+            labels: ['Graduate', 'Dropout'],
+            datasets: [{
+                label: 'Student Analytics',
+                data: [analyticsData.Graduate, analyticsData.Dropout],
+                backgroundColor: ['#3E4961', '#6F251B'],
+                hoverOffset: 4
+            }]
+        };
+
+        // Render the Doughnut Chart
+        const config = {
+            type: 'doughnut',
+            data: data,
+        };
+
+        const analyticsChart = new Chart(
+            document.getElementById('analyticsChart'),
+            config
+        );
+    </script>
+</body>
+
+</html>

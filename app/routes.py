@@ -926,7 +926,6 @@ def save_grades():
         """
         cursor.execute(existing_grades_query, (student_id, unit_id))
         existing_grades = cursor.fetchone()
-        flash(f"Grades already exist")
 
         if existing_grades:
             # Update grades
@@ -1716,3 +1715,58 @@ def studentpredictions():
         cursor.close()
         db.close()
 
+@main.route('/viewanalytics', methods=['GET', 'POST'])
+@login_required
+@role_required('4')
+def viewanalytics():
+    db = get_db_connection()
+    try:
+        cursor = db.cursor(dictionary=True)
+        
+        # Fetch predictions
+        query = """
+        SELECT 
+            sf.student_id,
+            sf.average_grade_1st_semester AS grade_1st_sem,
+            sf.average_grade_2nd_semester AS grade_2nd_sem,
+            sd.international
+        FROM 
+            student_finalgrade sf
+        JOIN 
+            student_details sd ON sf.student_id = sd.id;
+        """
+        cursor.execute(query)
+        students_data = cursor.fetchall()
+        
+        # Calculate predictions
+        graduate_count = 0
+        dropout_count = 0
+        
+        for student in students_data:
+            input_data = {
+                'Curricular units 1st sem (grade)': [student['grade_1st_sem']],
+                'Curricular units 2nd sem (grade)': [student['grade_2nd_sem']],
+                'International': [1 if student['international'].lower() == 'yes' else 0]
+            }
+            
+            result = model.predict(pd.DataFrame(input_data))
+            if result[0] == 1:  # Graduate
+                graduate_count += 1
+            else:  # Dropout
+                dropout_count += 1
+        
+        # Pass data to the template
+        analytics_data = {
+            "Graduate": graduate_count,
+            "Dropout": dropout_count
+        }
+        
+        return render_template('FacultyAdmin/ViewAnalytics.html', analytics_data=analytics_data)
+    except Exception as e:
+        db.rollback()
+        flash(f"An error occurred: {str(e)}", "error")
+        print(f"An error occurred: {str(e)}")
+        return redirect(url_for('main.login_page'))
+    finally:
+        cursor.close()
+        db.close()

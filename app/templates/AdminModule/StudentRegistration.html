@@ -99,11 +99,50 @@
             color: #E64545;
             margin: 5px 0;
         }
+        .flash {
+            width: 50%;
+            padding: 10px;
+            margin: 20px 0 10px 0;
+            border-radius: 5px;
+            font-size: 16px;
+            z-index: 10;
+            position: relative;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .flash.success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .flash.error {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .flash.warning {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .flash-messages {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="left-section">
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
             <h1>Register Student</h1>
             <form method="POST" action="/register_student">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

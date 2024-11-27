@@ -46,7 +46,7 @@
 </head>
 <body>
     <div class="icon-container">
-        <button class="analytics-btn" onclick="window.location.href='/AdminModule/ViewAnalytics.html'">
+        <button class="analytics-btn" onclick="window.location.href='{{url_for('main.viewanalytics')}}'">
             <i class="fa-solid fa-chart-simple"></i> View Analytics
         </button>
         <form action="{{ url_for('main.logout') }}" method="POST" id="logout-form" style="display: inline;">
@@ -70,7 +70,7 @@
             <p>Faculty Admin Navigation Panel</p>
             <ul>
                 <li><i class="fa-solid fa-house" style="color: #6F251B;" class = "active"></i>
-                    <a href="{{url_for('main.admin_dashboard')}}">Faculty Admin Dashboard</a></li>
+                    <a href="{{url_for('main.fadmindashboard')}}">Faculty Admin Dashboard</a></li>
                 <li><i class="fa-regular fa-user" style="color: #6F251B"></i></i>
                     <a href="">Manage User Accounts</a></li>
                 <li><i class="fa-solid fa-book" style="color:#6F251B;"></i>

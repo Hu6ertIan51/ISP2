@@ -252,7 +252,7 @@ class Student:
     def get_all_students(db):
         """Fetch all student details along with user info."""
         query = """
-        SELECT u.full_name, sd.user_id, sd.school, sd.course, sd.admission_number, sd.current_year, 
+        SELECT u.id, u.full_name, sd.user_id, sd.school, sd.course, sd.admission_number, sd.current_year, 
             u.mobile_number, u.email, sd.year_intake, sd.academic_status, sd.international
         FROM student_details sd
         JOIN users u ON sd.user_id = u.id
@@ -267,6 +267,7 @@ class Student:
             residency_status = 'International Residency' if result['international'] == 1 else 'Domestic Residency'
             
             student = Student(
+                id=result['id'],
                 user_id=result['user_id'],
                 school=result['school'],
                 course=result['course'],
@@ -347,7 +348,6 @@ class Student:
                             'attendance_status': result[3]
                         })
             return attendance_records
-  
     
 class Lecturer:
     def __init__(self, user_id, school, lecturer_number, year_intake, lecturer_status, full_name=None, mobile_number=None, email=None):
